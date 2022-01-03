@@ -1,3 +1,3 @@
-import * as BetterPlayerQueue from './better-player-queue';
+import * as BetterPlayer from './better-player';
 
-exports.BetterPlayerQueue = BetterPlayerQueue;
+export default BetterPlayer;
