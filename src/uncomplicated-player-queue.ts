@@ -1,5 +1,3 @@
-import { type } from 'os';
-
 /**
  * Interface for Queue tracks.
  */
@@ -18,7 +16,7 @@ interface Queue {
     next: Track[];
 }
 
-class BetterPlayerQueue {
+class UncomplicatedPlayerQueue {
     private queue: Queue;
     private shufflePlaylist: boolean;
     private tracksKeyCounter: number;
@@ -207,4 +205,4 @@ class BetterPlayerQueue {
     }
 }
 
-export default BetterPlayerQueue;
+export default UncomplicatedPlayerQueue;

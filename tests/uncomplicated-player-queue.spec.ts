@@ -1,8 +1,8 @@
-import BetterPlayerQueue from '../src/better-player-queue';
+import UncomplicatedPlayerQueue from '../src/uncomplicated-player-queue';
 
-let betterPlayerQueue = new BetterPlayerQueue();
+let uncomplicatedPlayerQueue = new UncomplicatedPlayerQueue();
 
-describe('better-player-queue tests', () => {
+describe('uncomplicated-player-queue tests', () => {
     /**
      * Add single track. Key should be zero since queue is empty.
      */
@@ -13,7 +13,7 @@ describe('better-player-queue tests', () => {
                 name: 'test0',
             },
         };
-        const key = betterPlayerQueue.push(track);
+        const key = uncomplicatedPlayerQueue.push(track);
         expect(key).toBe(0);
     });
 
@@ -30,7 +30,7 @@ describe('better-player-queue tests', () => {
                 },
             });
         }
-        const tracksAdded = betterPlayerQueue.pushMany(tracks);
+        const tracksAdded = uncomplicatedPlayerQueue.pushMany(tracks);
 
         // index: 0->9 => (index+1): 1->10
         tracksAdded.forEach((addedTrack, i) => {
@@ -42,7 +42,7 @@ describe('better-player-queue tests', () => {
      * Remove the last track using pop and check if it's 10
      */
     test('Remove last track', () => {
-        let removedKey = betterPlayerQueue.pop();
+        let removedKey = uncomplicatedPlayerQueue.pop();
         expect(removedKey).toBe(10);
     });
 
@@ -60,10 +60,10 @@ describe('better-player-queue tests', () => {
             });
         }
 
-        let addedTrackKeys: number[] = betterPlayerQueue
+        let addedTrackKeys: number[] = uncomplicatedPlayerQueue
             .pushMany(tracks)
             .map(track => track.key || -1);
-        let removedTrackKeys: number[] = betterPlayerQueue.remove({
+        let removedTrackKeys: number[] = uncomplicatedPlayerQueue.remove({
             data: {
                 filteringData: 'filter',
             },
@@ -94,12 +94,12 @@ describe('better-player-queue tests', () => {
         let plain_arr = [];
 
         // clear the queue
-        betterPlayerQueue.clear();
+        uncomplicatedPlayerQueue.clear();
 
         // shuffle off, insert 100 tracks, save their keys
-        betterPlayerQueue.shuffle = false;
+        uncomplicatedPlayerQueue.shuffle = false;
         for (let i = 1; i <= 100; ++i) {
-            let key: number = betterPlayerQueue.push({
+            let key: number = uncomplicatedPlayerQueue.push({
                 src: null,
                 data: {
                     prop: i,
@@ -111,27 +111,29 @@ describe('better-player-queue tests', () => {
 
         // iterate over 50 tracks, save keys, go back 50
         for (let i = 0; i < 50; ++i) {
-            let tmp = betterPlayerQueue.next()?.key;
+            let tmp = uncomplicatedPlayerQueue.next()?.key;
             plainItrKeys.push(tmp != undefined ? tmp : -1);
         }
-        while (!betterPlayerQueue.isPrevEmpty) betterPlayerQueue.prev();
+        while (!uncomplicatedPlayerQueue.isPrevEmpty)
+            uncomplicatedPlayerQueue.prev();
 
         // shuffle on, iterate over 50 tracks, save keys, go back 50
-        betterPlayerQueue.shuffle = true;
+        uncomplicatedPlayerQueue.shuffle = true;
         for (let i = 0; i < 50; ++i) {
-            let tmp = betterPlayerQueue.next()?.key;
+            let tmp = uncomplicatedPlayerQueue.next()?.key;
             tmp = tmp != undefined ? tmp : -1;
             shuffleItrKeys.push(tmp);
         }
-        while (!betterPlayerQueue.isPrevEmpty) betterPlayerQueue.prev();
+        while (!uncomplicatedPlayerQueue.isPrevEmpty)
+            uncomplicatedPlayerQueue.prev();
 
         // compare the keys arrays
         expect(shuffleItrKeys).not.toStrictEqual(plainItrKeys);
 
         // iterate over all 100 entries, save keys in set
         // (shuffle is enabled)
-        while (!betterPlayerQueue.isNextEmpty) {
-            let data = betterPlayerQueue.next();
+        while (!uncomplicatedPlayerQueue.isNextEmpty) {
+            let data = uncomplicatedPlayerQueue.next();
             let key: number = data?.key != undefined ? data.key : -1;
             shuffleKeysSet.add(key);
             shuffle_arr.push(key);

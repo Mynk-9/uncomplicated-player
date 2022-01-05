@@ -1,3 +1,3 @@
-import * as BetterPlayer from './better-player';
+import * as UncomplicatedPlayer from './uncomplicated-player';
 
-export default BetterPlayer;
+export default UncomplicatedPlayer;

@@ -3,7 +3,7 @@ interface Players {
     gainNode: GainNode;
 }
 
-const BetterPlayer = (() => {
+const UncomplicatedPlayer = (() => {
     /// instance of the player
     let instance: object;
 
@@ -47,10 +47,11 @@ const BetterPlayer = (() => {
         },
 
         /**
-         * Gets the already existing instance of BetterPlayer or creates new
-         * instance if no existing instance is present. New instance created
-         * with default parameters. Use initInstance to modify initial params.
-         * @returns BetterPlayer instance
+         * Gets the already existing instance of UncomplicatedPlayer or creates
+         * new instance if no existing instance is present. New instance 
+         * created with default parameters. Use initInstance to modify initial
+         * params.
+         * @returns UncomplicatedPlayer instance
          */
         getInstance: () => {
             if (!instance) instance = init();
@@ -59,4 +60,4 @@ const BetterPlayer = (() => {
     };
 })();
 
-export default BetterPlayer;
+export default UncomplicatedPlayer;
