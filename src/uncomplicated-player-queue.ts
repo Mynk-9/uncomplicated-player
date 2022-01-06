@@ -1,34 +1,70 @@
 /**
- * Interface for Queue tracks.
+ * Interface for queue track inputs.
  */
-interface Track {
-    key?: number;
-    src: URL | null;
+interface PrimitiveTrack {
+    src: URL;
     data: Record<string, any>;
+}
+/**
+ * Interface for queue tracks.
+ */
+interface Track extends PrimitiveTrack {
+    key: number;
 }
 
 /**
  * Interface for the Queue
  */
 interface Queue {
-    prev: Track[];
-    curr: Track;
-    next: Track[];
+    history: Track[];
+    curr: Track | null;
+    nextSeek: Track[];
+    next: { [key: string]: Track };
 }
+
+/**
+ * Queue mechanism:
+ * For going next we simply create a flow from next till prev, picking the
+ * track from next depends on shuffle state.
+ *
+ * current_track is object
+ * next is map<key as string, track>
+ * all others are arrays
+ *
+ * [history]{current_track}[next_seek]{{next}}
+ *  ^     ^                 ^       ^
+ * [0     n]               [0       p]
+ *
+ * next:
+ *  1. history.push_back(current_track)
+ *  2. next_seek.push_back(next.fetch_according_to_shuffle())
+ *  3. current_track = next_seek.front
+ *  4. next_seek.pop_front()
+ *  5. next.remove_fetched_track()
+ * prev:
+ *  1. next.insert(next_seek.back)
+ *  2. next_seek.pop_back()
+ *  3. next_seek.push_front(current_track)
+ *  4. current_track = history.back
+ *  5. history.pop_back()
+ */
 
 class UncomplicatedPlayerQueue {
     private queue: Queue;
     private shufflePlaylist: boolean;
     private tracksKeyCounter: number;
+    private seekSize: number;
 
     constructor() {
         this.queue = {
-            prev: [],
-            curr: { src: null, data: {} },
-            next: [],
+            history: [],
+            curr: null,
+            nextSeek: [],
+            next: {},
         };
         this.shufflePlaylist = false;
         this.tracksKeyCounter = -1;
+        this.seekSize = 3;
     }
 
     /**
@@ -55,12 +91,20 @@ class UncomplicatedPlayerQueue {
     }
 
     /**
+     * TODO: complete this
+     * Refresh the queue. Check for errors and fixes them.
+     */
+    private refreshQueue(): void {}
+
+    /**
      * Adds new track to the queue
      * @param {Track} track track to be added to the queue
      * @returns {number} key of added track
      */
-    public push(track: Track): number {
-        this.queue.next.push({ ...track, key: ++this.tracksKeyCounter });
+    public push(track: PrimitiveTrack): number {
+        let key = ++this.tracksKeyCounter;
+        this.queue.next[key.toString()] = { ...track, key: key };
+        this.refreshQueue();
         return this.tracksKeyCounter;
     }
 
@@ -70,13 +114,15 @@ class UncomplicatedPlayerQueue {
      * @param {Track[]} tracks tracks array to be added to the queue
      * @returns {Track[]} tracks array with respective key added to each track
      */
-    public pushMany(tracks: Track[]): Track[] {
-        tracks = tracks.map(track => ({
-            ...track,
-            key: ++this.tracksKeyCounter,
-        }));
-        this.queue.next.push(...tracks);
-        return tracks;
+    public pushMany(tracks: PrimitiveTrack[]): Track[] {
+        let tracksAdded: Track[] = [];
+        tracks.forEach(track => {
+            let key = ++this.tracksKeyCounter;
+            this.queue.next[key.toString()] = { ...track, key: key };
+            tracksAdded.push({ ...track, key: key });
+        });
+        this.refreshQueue();
+        return tracksAdded;
     }
 
     /**
@@ -84,12 +130,11 @@ class UncomplicatedPlayerQueue {
      * @returns key of the track, if no track exists then -1
      */
     public pop(): number {
-        let removedTrack: Track = this.queue.next.pop() || {
-            src: null,
-            data: {},
-        };
-        let removedKey: number = removedTrack.key || -1;
-        return removedKey;
+        if (this.isNextEmpty) return -1;
+        let keys = Object.keys(this.queue.next);
+        let lastKey = keys[keys.length - 1];
+        delete this.queue.next[lastKey];
+        return parseInt(lastKey);
     }
 
     /**
@@ -104,42 +149,75 @@ class UncomplicatedPlayerQueue {
         data?: Object;
     }): number[] {
         let removedKeys: number[] = [];
-        this.queue.next = this.queue.next.filter(track => {
-            let predicateVal = !this.recursiveCompare(track, search);
-            if (!predicateVal) {
-                removedKeys.push(track.key || -1);
-            }
-            return predicateVal;
-        });
+
+        // next:
+        // apply filter to keys according to recursiveCompare
+        // then use reducer to create new object from filtered keys
+        this.queue.next = Object.keys(this.queue.next)
+            .filter((key: string) => {
+                let predicateVal = !this.recursiveCompare(
+                    this.queue.next[key],
+                    search
+                );
+                if (!predicateVal) removedKeys.push(parseInt(key));
+                return predicateVal;
+            })
+            .reduce((newNext: { [key: string]: Track }, key: string) => {
+                newNext[key] = this.queue.next[key];
+                return newNext;
+            }, {});
+
+        /// nextSeek, history:
+        [this.queue.nextSeek, this.queue.history] = [
+            this.queue.nextSeek,
+            this.queue.history,
+        ].map(queueComponent =>
+            queueComponent.filter(track => {
+                let predicateVal = !this.recursiveCompare(track, search);
+                if (!predicateVal) removedKeys.push(track.key);
+                return predicateVal;
+            })
+        );
+
+        /// current
+        if (this.queue.curr && this.recursiveCompare(this.queue.curr, search)) {
+            removedKeys.push(this.queue.curr.key);
+            this.queue.curr = null;
+        }
+
+        // refresh the queue for any problems
+        this.refreshQueue();
+
         return removedKeys;
     }
 
     /**
-     * Clears the queue.
+     * Clears the queue including now playing.
      */
     public clear(): void {
-        this.queue.curr = { src: null, data: {} };
-        this.queue.prev = [];
-        this.queue.next = [];
+        this.queue.curr = null;
+        [this.queue.nextSeek, this.queue.history] = [[], []];
+        this.queue.next = {};
     }
 
     /**
-     * Advances the playlist
+     * Advances the playlist.
      * @returns {Track} the next track if exists, otherwise null
      */
     public next(): Track | null {
-        if (this.queue.next.length == 0) return null;
+        if (this.isNextEmpty) return null;
 
-        let index: number = 0;
+        let keys: string[] = Object.keys(this.queue.next);
+        let key: string = keys[0];
         if (this.shufflePlaylist)
-            index = Math.round(Math.random() * (this.queue.next.length - 1));
+            key = Math.round((keys.length - 1) * Math.random()).toString();
 
-        this.queue.prev.push(this.queue.curr);
-        this.queue.curr = this.queue.next[index];
-        this.queue.next = [
-            ...this.queue.next.slice(0, index),
-            ...this.queue.next.slice(index + 1),
-        ];
+        if (this.queue.curr) this.queue.history.push(this.queue.curr);
+        this.queue.nextSeek.push(this.queue.next[key]);
+        this.queue.curr = this.queue.nextSeek[0];
+        this.queue.nextSeek = this.queue.nextSeek.slice(1);
+        delete this.queue.next[key];
+
         return this.queue.curr;
     }
 
@@ -148,17 +226,24 @@ class UncomplicatedPlayerQueue {
      * @returns {boolean} true if no next tracks available
      */
     public get isNextEmpty(): boolean {
-        return this.queue.next.length === 0;
+        return this.queue.nextSeek.length === 0 && this.seekSize > 0;
     }
 
     /**
-     * Retreats the playlist
-     * @returns {Track} previous track
+     * Retreats the playlist.
+     * @returns {Track} new current track
      */
     public prev(): Track {
-        this.queue.next = [this.queue.curr, ...this.queue.next];
-        this.queue.curr = this.queue.prev[this.queue.prev.length - 1];
-        this.queue.prev.pop();
+        let track: Track = this.queue.nextSeek[this.queue.nextSeek.length - 1];
+        let key: string = track.key.toString();
+
+        this.queue.next[key] = track;
+        this.queue.nextSeek.pop();
+        if (this.queue.curr)
+            this.queue.nextSeek = [this.queue.curr, ...this.queue.nextSeek];
+        this.queue.curr = this.queue.history[this.queue.history.length - 1];
+        this.queue.history.pop();
+
         return this.queue.curr;
     }
 
@@ -167,27 +252,50 @@ class UncomplicatedPlayerQueue {
      * @returns {boolean} true if no previous available
      */
     public get isPrevEmpty(): boolean {
-        return this.queue.prev.length === 0;
+        return this.queue.history.length === 0;
     }
 
     /**
-     * Brings playlist to start.
+     * Brings queue to start.
      */
     public reset(): void {
-        this.queue.prev = [
-            ...this.queue.prev,
-            this.queue.curr,
-            ...this.queue.next,
-        ];
-        this.queue.curr = { src: null, data: {} };
-        this.queue.next = [];
+        const addToNext = (track: Track) => {
+            this.queue.next[track.key.toString()] = track;
+        };
+        this.queue.history.forEach(addToNext);
+        this.queue.nextSeek.forEach(addToNext);
+        if (this.queue.curr)
+            this.queue.next[this.queue.curr.key.toString()] = this.queue.curr;
+
+        this.queue.history = [];
+        this.queue.curr = null;
+        this.queue.nextSeek = [];
+
+        this.refreshQueue();
     }
 
     /**
-     * Gets the current track data.
+     * Gets the current track data. Null if no current track is available to be
+     * set to current.
      */
-    public get current(): Track {
+    public get current(): Track | null {
+        if (!this.queue.curr) this.refreshQueue();
         return this.queue.curr;
+    }
+
+    /**
+     * Get size of seek array.
+     */
+    public get seekLength(): number {
+        return this.seekSize;
+    }
+
+    /**
+     * Set size of seek array.
+     */
+    public set seekLength(len: number) {
+        this.seekSize = len;
+        this.refreshQueue();
     }
 
     /**
@@ -198,10 +306,18 @@ class UncomplicatedPlayerQueue {
     }
 
     /**
-     * Sets the playlist shuffle enabled/disabled state.
+     * Sets the playlist shuffle enabled/disabled state. Refreshes next seek
+     * if state changed.
      */
     public set shuffle(shuffleEnable: boolean) {
+        if (shuffleEnable === this.shufflePlaylist) return;
+
         this.shufflePlaylist = shuffleEnable;
+        this.queue.nextSeek.forEach(track => {
+            this.queue.next[track.key.toString()] = track;
+        });
+        this.queue.nextSeek = [];
+        this.refreshQueue();
     }
 }
 
