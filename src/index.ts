@@ -1,3 +1,3 @@
-import * as UncomplicatedPlayer from './uncomplicated-player';
+import UncomplicatedPlayer from './uncomplicated-player';
 
 export default UncomplicatedPlayer;
