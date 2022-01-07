@@ -241,18 +241,19 @@ class UncomplicatedPlayerQueue {
 
     /**
      * Retreats the playlist.
-     * @returns {Track} new current track
+     * @returns {Track} the new current track if exists, otherwise null
      */
-    public prev(): Track {
-        let track: Track = this.queue.nextSeek[this.queue.nextSeek.length - 1];
-        let key: string = track.key.toString();
+    public prev(): Track | null {
+        if (this.queue.history.length === 0) return null;
 
-        this.queue.next[key] = track;
-        this.queue.nextSeek.pop();
         if (this.queue.curr)
             this.queue.nextSeek = [this.queue.curr, ...this.queue.nextSeek];
-        this.queue.curr = this.queue.history[this.queue.history.length - 1];
-        this.queue.history.pop();
+        let track = this.queue.nextSeek.pop();
+        if (track) this.queue.next[track.key.toString()] = track;
+        track = this.queue.history.pop();
+        // have to make this extra check because typescript throws error otherwise 
+        // even though track is guaranteed to be not undefined 
+        if (track) this.queue.curr = track;
 
         return this.queue.curr;
     }
