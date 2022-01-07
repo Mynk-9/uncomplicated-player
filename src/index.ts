@@ -1,3 +1,3 @@
-import * as BetterPlayerQueue from './better-player-queue';
+import UncomplicatedPlayer from './uncomplicated-player';
 
-exports.BetterPlayerQueue = BetterPlayerQueue;
+export default UncomplicatedPlayer;

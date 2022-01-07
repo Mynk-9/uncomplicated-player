@@ -1,5 +1,5 @@
 {
-  "name": "better-player",
+  "name": "uncomplicated-player",
   "version": "1.0.0",
   "description": "the more flexible web audio player",
   "main": "lib/index.js",
@@ -11,11 +11,13 @@
     "format": "prettier --ignore-path .gitignore --write \"./src/*.+(js|ts|json)\""
   },
   "keywords": [
+    "Uncomplicated",
+    "Web Audio API",
     "Web Audio",
+    "Audio",
     "Player",
     "Sound",
     "Music",
-    "Web Audio API",
     "Queue"
   ],
   "author": "",
