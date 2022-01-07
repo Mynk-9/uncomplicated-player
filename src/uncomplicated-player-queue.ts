@@ -275,7 +275,7 @@ class UncomplicatedPlayerQueue {
         if (keys.length === 0) {
             if (this.queue.curr) this.queue.history.push(this.queue.curr);
             this.queue.curr = this.queue.nextSeek[0];
-            this.queue.nextSeek = this.queue.nextSeek.slice(1);
+            this.queue.nextSeek.splice(0, 1);
             return this.queue.curr;
         }
 
@@ -287,7 +287,7 @@ class UncomplicatedPlayerQueue {
         if (this.queue.curr) this.queue.history.push(this.queue.curr);
         this.queue.nextSeek.push(this.queue.next[key]);
         this.queue.curr = this.queue.nextSeek[0];
-        this.queue.nextSeek = this.queue.nextSeek.slice(1);
+        this.queue.nextSeek.splice(0, 1);
         delete this.queue.next[key];
 
         return this.queue.curr;
@@ -315,8 +315,8 @@ class UncomplicatedPlayerQueue {
         let track = this.queue.nextSeek.pop();
         if (track) this.queue.next[track.key.toString()] = track;
         track = this.queue.history.pop();
-        // have to make this extra check because typescript throws error otherwise 
-        // even though track is guaranteed to be not undefined 
+        // have to make this extra check because typescript throws error otherwise
+        // even though track is guaranteed to be not undefined
         if (track) this.queue.curr = track;
 
         return this.queue.curr;
