@@ -91,10 +91,72 @@ class UncomplicatedPlayerQueue {
     }
 
     /**
-     * TODO: complete this
-     * Refresh the queue. Check for errors and fixes them.
+     * Refreshes the queue. Check for errors and fixes them.
      */
-    private refreshQueue(): void {}
+    private refreshQueue(): void {
+        const adjustNextSeek = () => {
+            let nextSeekLen: number = this.queue.nextSeek.length;
+
+            // if nextSeek larger then remove the extra tracks and insert into next
+            if (nextSeekLen > this.seekSize) {
+                this.queue.nextSeek
+                    .splice(this.seekSize, nextSeekLen - this.seekSize)
+                    .forEach(track => {
+                        this.queue.next[track.key.toString()] = track;
+                    });
+            }
+            // if nextSeek smaller, then transfer extra tracks from next according
+            // to shuffle state
+            else if (nextSeekLen < this.seekSize) {
+                let keys: string[] = Object.keys(this.queue.next);
+                let needed: number = Math.min(
+                    this.seekSize - nextSeekLen,
+                    keys.length
+                );
+
+                if (this.shuffleQueue) {
+                    for (let i = 0; i < needed; ++i) {
+                        let random =
+                            Math.floor((keys.length - i) * Math.random()) + i;
+                        [keys[i], keys[random]] = [keys[random], keys[i]];
+                    }
+                }
+
+                keys.slice(0, needed).forEach(key => {
+                    this.queue.nextSeek.push(this.queue.next[key]);
+                    delete this.queue.next[key];
+                });
+            }
+        };
+
+        // start with fixing next seek
+        adjustNextSeek();
+
+        // return if there is no track in nextSeek while seek length > 0
+        // this means nextSeek and next both are empty and we cannot make
+        // more fixes to current
+        if (this.seekSize > 0 && this.queue.nextSeek.length === 0) return;
+
+        // if current track is blank:
+        //      if seek length is 0 and next has tracks:
+        //          add track from next
+        //      else add from nextSeek and readjust nextSeek
+        if (!this.queue.curr) {
+            let keys = Object.keys(this.queue.next);
+            if (this.seekSize === 0 && keys.length > 0) {
+                let index: number = 0;
+                if (this.shuffleQueue)
+                    index = Math.floor(keys.length * Math.random());
+                let key = keys[index];
+                this.queue.curr = this.queue.next[key];
+                delete this.queue.next[key];
+            } else {
+                this.queue.curr = this.queue.nextSeek[0];
+                this.queue.nextSeek.splice(0, 1);
+                adjustNextSeek();
+            }
+        }
+    }
 
     /**
      * Adds new track to the queue
