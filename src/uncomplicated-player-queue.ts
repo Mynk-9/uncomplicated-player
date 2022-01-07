@@ -282,7 +282,7 @@ class UncomplicatedPlayerQueue {
         // select the key as per shuffle config
         let key: string = keys[0];
         if (this.shuffleQueue)
-            key = Math.round((keys.length - 1) * Math.random()).toString();
+            key = keys[Math.floor(keys.length * Math.random())];
 
         if (this.queue.curr) this.queue.history.push(this.queue.curr);
         this.queue.nextSeek.push(this.queue.next[key]);
