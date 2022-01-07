@@ -298,7 +298,9 @@ class UncomplicatedPlayerQueue {
      * @returns {boolean} true if no next tracks available
      */
     public get isNextEmpty(): boolean {
-        return this.queue.nextSeek.length === 0 && this.seekSize > 0;
+        // if seekSize is zero then check next otherwise check nextSeek
+        if (this.seekSize > 0) return this.queue.nextSeek.length === 0;
+        else return Object.keys(this.queue.next).length === 0;
     }
 
     /**
