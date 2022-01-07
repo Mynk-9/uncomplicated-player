@@ -51,7 +51,7 @@ interface Queue {
 
 class UncomplicatedPlayerQueue {
     private queue: Queue;
-    private shufflePlaylist: boolean;
+    private shuffleQueue: boolean;
     private tracksKeyCounter: number;
     private seekSize: number;
 
@@ -62,7 +62,7 @@ class UncomplicatedPlayerQueue {
             nextSeek: [],
             next: {},
         };
-        this.shufflePlaylist = false;
+        this.shuffleQueue = false;
         this.tracksKeyCounter = -1;
         this.seekSize = 3;
     }
@@ -209,7 +209,7 @@ class UncomplicatedPlayerQueue {
 
         let keys: string[] = Object.keys(this.queue.next);
         let key: string = keys[0];
-        if (this.shufflePlaylist)
+        if (this.shuffleQueue)
             key = Math.round((keys.length - 1) * Math.random()).toString();
 
         if (this.queue.curr) this.queue.history.push(this.queue.curr);
@@ -302,7 +302,7 @@ class UncomplicatedPlayerQueue {
      * Gets the playlist shuffle enabled/disabled state.
      */
     public get shuffle(): boolean {
-        return this.shufflePlaylist;
+        return this.shuffleQueue;
     }
 
     /**
@@ -310,9 +310,9 @@ class UncomplicatedPlayerQueue {
      * if state changed.
      */
     public set shuffle(shuffleEnable: boolean) {
-        if (shuffleEnable === this.shufflePlaylist) return;
+        if (shuffleEnable === this.shuffleQueue) return;
 
-        this.shufflePlaylist = shuffleEnable;
+        this.shuffleQueue = shuffleEnable;
         this.queue.nextSeek.forEach(track => {
             this.queue.next[track.key.toString()] = track;
         });
