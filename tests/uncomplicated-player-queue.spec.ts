@@ -2,7 +2,7 @@ import UncomplicatedPlayerQueue from '../src/uncomplicated-player-queue';
 
 let uncomplicatedPlayerQueue = new UncomplicatedPlayerQueue();
 
-describe('uncomplicated-player-queue tests', () => {
+describe('Uncomplicated Player Queue tests', () => {
     /**
      * Add single track. Key should be zero since queue is empty.
      */
@@ -80,8 +80,9 @@ describe('uncomplicated-player-queue tests', () => {
      * 4. Go back 50 tracks. Enable shuffle.
      * 5. Iterate over 50 tracks. Save the consecutive keys.
      * 6. Check if the keys arrays match. If match then test fail.
-     * 7. Go back 50 tracks again. Now iterate to queue end while
-     *    saving the keys in another set.
+     * [possibility of them matching is in the order of 1E-50 practically 0]
+     * 7. Go back 50 tracks again. Now iterate to the queue end while
+     *    saving the keys in another set. This happens while shuffle is on.
      * 8. Compare the sets, if different, test fails.
      */
     test('Shuffle test', () => {
@@ -90,55 +91,46 @@ describe('uncomplicated-player-queue tests', () => {
         let plainItrKeys: number[] = [];
         let shuffleItrKeys: number[] = [];
 
-        let shuffle_arr = [];
-        let plain_arr = [];
-
-        // clear the queue
+        // clear the queue, shuffle off
         uncomplicatedPlayerQueue.clear();
-
-        // shuffle off, insert 100 tracks, save their keys
         uncomplicatedPlayerQueue.shuffle = false;
+
+        // insert 100 tracks, save their keys
         for (let i = 1; i <= 100; ++i) {
             let key: number = uncomplicatedPlayerQueue.push({
-                src: null,
+                src: new URL('http://test.url/'),
                 data: {
                     prop: i,
                 },
             });
             keysSet.add(key);
-            plain_arr.push(key);
         }
 
         // iterate over 50 tracks, save keys, go back 50
-        for (let i = 0; i < 50; ++i) {
-            let tmp = uncomplicatedPlayerQueue.next()?.key;
-            plainItrKeys.push(tmp != undefined ? tmp : -1);
-        }
+        plainItrKeys.push(uncomplicatedPlayerQueue.current?.key || -1);
+        for (let i = 1; i < 50; ++i)
+            plainItrKeys.push(uncomplicatedPlayerQueue.next()?.key || -1);
+
         while (!uncomplicatedPlayerQueue.isPrevEmpty)
             uncomplicatedPlayerQueue.prev();
 
         // shuffle on, iterate over 50 tracks, save keys, go back 50
         uncomplicatedPlayerQueue.shuffle = true;
-        for (let i = 0; i < 50; ++i) {
-            let tmp = uncomplicatedPlayerQueue.next()?.key;
-            tmp = tmp != undefined ? tmp : -1;
-            shuffleItrKeys.push(tmp);
-        }
+        shuffleItrKeys.push(uncomplicatedPlayerQueue.current?.key || -1);
+        for (let i = 1; i < 50; ++i)
+            shuffleItrKeys.push(uncomplicatedPlayerQueue.next()?.key || -1);
+
         while (!uncomplicatedPlayerQueue.isPrevEmpty)
             uncomplicatedPlayerQueue.prev();
 
-        // compare the keys arrays
+        // compare the keys arrays to not be equal
         expect(shuffleItrKeys).not.toStrictEqual(plainItrKeys);
 
         // iterate over all 100 entries, save keys in set
         // (shuffle is enabled)
-        while (!uncomplicatedPlayerQueue.isNextEmpty) {
-            let data = uncomplicatedPlayerQueue.next();
-            let key: number = data?.key != undefined ? data.key : -1;
-            shuffleKeysSet.add(key);
-            shuffle_arr.push(key);
-            if (key === -1) console.log(data);
-        }
+        shuffleKeysSet.add(uncomplicatedPlayerQueue.current?.key || -1);
+        while (!uncomplicatedPlayerQueue.isNextEmpty)
+            shuffleKeysSet.add(uncomplicatedPlayerQueue.next()?.key || -1);
 
         expect([...shuffleKeysSet].sort()).toStrictEqual([...keysSet].sort());
     });
