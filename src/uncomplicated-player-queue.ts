@@ -202,12 +202,22 @@ class UncomplicatedPlayerQueue {
 
     /**
      * Advances the playlist.
-     * @returns {Track} the next track if exists, otherwise null
+     * @returns {Track} the new current track if exists, otherwise null
      */
     public next(): Track | null {
+        // return null if nextSeek is empty
         if (this.isNextEmpty) return null;
 
         let keys: string[] = Object.keys(this.queue.next);
+        // if there are no items in next then keep exhausting nextSeek
+        if (keys.length === 0) {
+            if (this.queue.curr) this.queue.history.push(this.queue.curr);
+            this.queue.curr = this.queue.nextSeek[0];
+            this.queue.nextSeek = this.queue.nextSeek.slice(1);
+            return this.queue.curr;
+        }
+
+        // select the key as per shuffle config
         let key: string = keys[0];
         if (this.shuffleQueue)
             key = Math.round((keys.length - 1) * Math.random()).toString();
