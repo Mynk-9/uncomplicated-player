@@ -63,7 +63,7 @@ class UncomplicatedPlayerQueue {
             next: {},
         };
         this.shuffleQueue = false;
-        this.tracksKeyCounter = -1;
+        this.tracksKeyCounter = 0;
         this.seekSize = 3;
     }
 
@@ -260,11 +260,12 @@ class UncomplicatedPlayerQueue {
         this.queue.curr = null;
         [this.queue.nextSeek, this.queue.history] = [[], []];
         this.queue.next = {};
+        this.tracksKeyCounter = 0;
     }
 
     /**
      * Advances the playlist.
-     * @returns {Track} the new current track if exists, otherwise null
+     * @returns {Track} the new current track, null if no next track
      */
     public next(): Track | null {
         // return null if nextSeek is empty
