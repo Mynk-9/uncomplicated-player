@@ -383,6 +383,14 @@ class UncomplicatedPlayerQueue {
     }
 
     /**
+     * Sets seek length to default. Default is 3.
+     */
+    public setDefaultSeekLength(): void {
+        this.seekSize = 3;
+        this.refreshQueue();
+    }
+
+    /**
      * Gets the playlist shuffle enabled/disabled state.
      */
     public get shuffle(): boolean {
