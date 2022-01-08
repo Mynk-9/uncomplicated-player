@@ -188,11 +188,19 @@ class UncomplicatedPlayerQueue {
     }
 
     /**
-     * Removes the last track from the queue.
-     * @returns key of the track, if no track exists then -1
+     * Removes the last track from the queue. Removes present track if it is
+     * the last track.
+     * @returns key of the removed track, if no track exists then -1
      */
     public pop(): number {
-        if (this.isNextEmpty) return -1;
+        if (this.isNextEmpty) {
+            if (this.queue.curr) {
+                let key = this.queue.curr.key;
+                this.queue.curr = null;
+                return key;
+            }
+            return -1;
+        }
         let keys = Object.keys(this.queue.next);
         let lastKey = keys[keys.length - 1];
         delete this.queue.next[lastKey];
