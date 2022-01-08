@@ -61,6 +61,7 @@ describe('Uncomplicated Player Queue tests', () => {
      * Add single track. Key should be zero since queue is empty.
      */
     test('Add one track', () => {
+        uncomplicatedPlayerQueue.clear();
         let track = {
             src: new URL('http://test.com'),
             data: {
@@ -68,13 +69,14 @@ describe('Uncomplicated Player Queue tests', () => {
             },
         };
         const key = uncomplicatedPlayerQueue.push(track);
-        expect(key).toBe(0);
+        expect(key).toBe(1);
     });
 
     /**
      * Add multiple tracks. Check for their keys to be from 1-10.
      */
     test('Add multiple tracks', () => {
+        uncomplicatedPlayerQueue.clear();
         let tracks = [];
         for (let i = 1; i <= 10; ++i) {
             tracks.push({
@@ -174,11 +176,11 @@ describe('Uncomplicated Player Queue tests', () => {
         for (let i = 1; i < 50; ++i)
             shuffleItrKeys.push(uncomplicatedPlayerQueue.next()?.key || -1);
 
-        while (!uncomplicatedPlayerQueue.isPrevEmpty)
-            uncomplicatedPlayerQueue.prev();
-
         // compare the keys arrays to not be equal
         expect(shuffleItrKeys).not.toStrictEqual(plainItrKeys);
+
+        while (!uncomplicatedPlayerQueue.isPrevEmpty)
+            uncomplicatedPlayerQueue.prev();
 
         // iterate over all 100 entries, save keys in set
         // (shuffle is enabled)
