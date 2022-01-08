@@ -193,18 +193,22 @@ class UncomplicatedPlayerQueue {
      * @returns key of the removed track, if no track exists then -1
      */
     public pop(): number {
-        if (this.isNextEmpty) {
-            if (this.queue.curr) {
-                let key = this.queue.curr.key;
-                this.queue.curr = null;
-                return key;
-            }
+        let keys = Object.keys(this.queue.next);
+        if (keys.length > 0) {
+            let key = keys[keys.length - 1];
+            delete this.queue.next[key];
+            return parseInt(key);
+        } else if (this.queue.nextSeek.length > 0) {
+            let key = this.queue.nextSeek[this.queue.nextSeek.length - 1].key;
+            this.queue.nextSeek.pop();
+            return key;
+        } else if (this.queue.curr) {
+            let key = this.queue.curr.key;
+            this.queue.curr = null;
+            return key;
+        } else {
             return -1;
         }
-        let keys = Object.keys(this.queue.next);
-        let lastKey = keys[keys.length - 1];
-        delete this.queue.next[lastKey];
-        return parseInt(lastKey);
     }
 
     /**
