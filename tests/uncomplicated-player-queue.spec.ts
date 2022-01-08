@@ -4,6 +4,22 @@ let uncomplicatedPlayerQueue = new UncomplicatedPlayerQueue();
 
 describe('Uncomplicated Player Queue tests', () => {
     /**
+     * Pop, next, prev, is*Empty
+     */
+    test('Empty queue edge cases', () => {
+        let key: number = uncomplicatedPlayerQueue.pop();
+        expect(key).toBe(-1);
+
+        let track = uncomplicatedPlayerQueue.next();
+        expect(track).toBe(null);
+
+        track = uncomplicatedPlayerQueue.prev();
+        expect(track).toBe(null);
+
+        expect(uncomplicatedPlayerQueue.isNextEmpty).toBe(true);
+        expect(uncomplicatedPlayerQueue.isPrevEmpty).toBe(true);
+    });
+    /**
      * Add single track. Key should be zero since queue is empty.
      */
     test('Add one track', () => {
