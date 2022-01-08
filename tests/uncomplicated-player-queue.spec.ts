@@ -2,11 +2,66 @@ import UncomplicatedPlayerQueue from '../src/uncomplicated-player-queue';
 
 let uncomplicatedPlayerQueue = new UncomplicatedPlayerQueue();
 
-describe('uncomplicated-player-queue tests', () => {
+describe('Uncomplicated Player Queue tests', () => {
+    /**
+     * Pop, next, prev, is*Empty
+     */
+    test('Empty queue edge cases', () => {
+        let key: number = uncomplicatedPlayerQueue.pop();
+        expect(key).toBe(-1);
+
+        let track = uncomplicatedPlayerQueue.next();
+        expect(track).toBe(null);
+
+        track = uncomplicatedPlayerQueue.prev();
+        expect(track).toBe(null);
+
+        expect(uncomplicatedPlayerQueue.isNextEmpty).toBe(true);
+        expect(uncomplicatedPlayerQueue.isPrevEmpty).toBe(true);
+    });
+    /**
+     * Adjusting seek length in between operation.
+     * 1. Clear queue. Default the seek length. Add 10 tracks.
+     * 2. Set seek length to 20.
+     * 3. Remove 9 tracks. (clear all next)
+     * 3.1. Add 5 tracks;
+     * 4. Set seek length to 0.
+     * 4.1. Go to queue end.
+     * 5. Set seek length to 3.
+     * 6. Check if next returns null.
+     * 6.1. Reset queue. Check if next does not return null.
+     * 7. Clear queue.
+     */
+    test('Seek-length adjustments', () => {
+        uncomplicatedPlayerQueue.clear();
+        uncomplicatedPlayerQueue.setDefaultSeekLength();
+        for (let i = 0; i < 10; ++i) {
+            uncomplicatedPlayerQueue.push({
+                src: new URL('http://test.url/'),
+                data: {},
+            });
+        }
+        uncomplicatedPlayerQueue.seekLength = 20;
+        while (!uncomplicatedPlayerQueue.isNextEmpty)
+            uncomplicatedPlayerQueue.pop();
+        for (let i = 0; i < 5; ++i) {
+            uncomplicatedPlayerQueue.push({
+                src: new URL('http://test.url/'),
+                data: {},
+            });
+        }
+        uncomplicatedPlayerQueue.seekLength = 0;
+        while (uncomplicatedPlayerQueue.next());
+        uncomplicatedPlayerQueue.seekLength = 3;
+        expect(uncomplicatedPlayerQueue.next()).toBe(null);
+        uncomplicatedPlayerQueue.reset();
+        expect(uncomplicatedPlayerQueue.next()).not.toBe(null);
+    });
     /**
      * Add single track. Key should be zero since queue is empty.
      */
     test('Add one track', () => {
+        uncomplicatedPlayerQueue.clear();
         let track = {
             src: new URL('http://test.com'),
             data: {
@@ -14,13 +69,14 @@ describe('uncomplicated-player-queue tests', () => {
             },
         };
         const key = uncomplicatedPlayerQueue.push(track);
-        expect(key).toBe(0);
+        expect(key).toBe(1);
     });
 
     /**
      * Add multiple tracks. Check for their keys to be from 1-10.
      */
     test('Add multiple tracks', () => {
+        uncomplicatedPlayerQueue.clear();
         let tracks = [];
         for (let i = 1; i <= 10; ++i) {
             tracks.push({
@@ -80,8 +136,9 @@ describe('uncomplicated-player-queue tests', () => {
      * 4. Go back 50 tracks. Enable shuffle.
      * 5. Iterate over 50 tracks. Save the consecutive keys.
      * 6. Check if the keys arrays match. If match then test fail.
-     * 7. Go back 50 tracks again. Now iterate to queue end while
-     *    saving the keys in another set.
+     * [possibility of them matching is in the order of 1E-50 practically 0]
+     * 7. Go back 50 tracks again. Now iterate to the queue end while
+     *    saving the keys in another set. This happens while shuffle is on.
      * 8. Compare the sets, if different, test fails.
      */
     test('Shuffle test', () => {
@@ -90,55 +147,46 @@ describe('uncomplicated-player-queue tests', () => {
         let plainItrKeys: number[] = [];
         let shuffleItrKeys: number[] = [];
 
-        let shuffle_arr = [];
-        let plain_arr = [];
-
-        // clear the queue
+        // clear the queue, shuffle off
         uncomplicatedPlayerQueue.clear();
-
-        // shuffle off, insert 100 tracks, save their keys
         uncomplicatedPlayerQueue.shuffle = false;
+
+        // insert 100 tracks, save their keys
         for (let i = 1; i <= 100; ++i) {
             let key: number = uncomplicatedPlayerQueue.push({
-                src: null,
+                src: new URL('http://test.url/'),
                 data: {
                     prop: i,
                 },
             });
             keysSet.add(key);
-            plain_arr.push(key);
         }
 
         // iterate over 50 tracks, save keys, go back 50
-        for (let i = 0; i < 50; ++i) {
-            let tmp = uncomplicatedPlayerQueue.next()?.key;
-            plainItrKeys.push(tmp != undefined ? tmp : -1);
-        }
+        plainItrKeys.push(uncomplicatedPlayerQueue.current?.key || -1);
+        for (let i = 1; i < 50; ++i)
+            plainItrKeys.push(uncomplicatedPlayerQueue.next()?.key || -1);
+
         while (!uncomplicatedPlayerQueue.isPrevEmpty)
             uncomplicatedPlayerQueue.prev();
 
         // shuffle on, iterate over 50 tracks, save keys, go back 50
         uncomplicatedPlayerQueue.shuffle = true;
-        for (let i = 0; i < 50; ++i) {
-            let tmp = uncomplicatedPlayerQueue.next()?.key;
-            tmp = tmp != undefined ? tmp : -1;
-            shuffleItrKeys.push(tmp);
-        }
+        shuffleItrKeys.push(uncomplicatedPlayerQueue.current?.key || -1);
+        for (let i = 1; i < 50; ++i)
+            shuffleItrKeys.push(uncomplicatedPlayerQueue.next()?.key || -1);
+
+        // compare the keys arrays to not be equal
+        expect(shuffleItrKeys).not.toStrictEqual(plainItrKeys);
+
         while (!uncomplicatedPlayerQueue.isPrevEmpty)
             uncomplicatedPlayerQueue.prev();
 
-        // compare the keys arrays
-        expect(shuffleItrKeys).not.toStrictEqual(plainItrKeys);
-
         // iterate over all 100 entries, save keys in set
         // (shuffle is enabled)
-        while (!uncomplicatedPlayerQueue.isNextEmpty) {
-            let data = uncomplicatedPlayerQueue.next();
-            let key: number = data?.key != undefined ? data.key : -1;
-            shuffleKeysSet.add(key);
-            shuffle_arr.push(key);
-            if (key === -1) console.log(data);
-        }
+        shuffleKeysSet.add(uncomplicatedPlayerQueue.current?.key || -1);
+        while (!uncomplicatedPlayerQueue.isNextEmpty)
+            shuffleKeysSet.add(uncomplicatedPlayerQueue.next()?.key || -1);
 
         expect([...shuffleKeysSet].sort()).toStrictEqual([...keysSet].sort());
     });
