@@ -20,6 +20,44 @@ describe('Uncomplicated Player Queue tests', () => {
         expect(uncomplicatedPlayerQueue.isPrevEmpty).toBe(true);
     });
     /**
+     * Adjusting seek length in between operation.
+     * 1. Clear queue. Default the seek length. Add 10 tracks.
+     * 2. Set seek length to 20.
+     * 3. Remove 9 tracks. (clear all next)
+     * 3.1. Add 5 tracks;
+     * 4. Set seek length to 0.
+     * 4.1. Go to queue end.
+     * 5. Set seek length to 3.
+     * 6. Check if next returns null.
+     * 6.1. Reset queue. Check if next does not return null.
+     * 7. Clear queue.
+     */
+    test('Seek-length adjustments', () => {
+        uncomplicatedPlayerQueue.clear();
+        uncomplicatedPlayerQueue.setDefaultSeekLength();
+        for (let i = 0; i < 10; ++i) {
+            uncomplicatedPlayerQueue.push({
+                src: new URL('http://test.url/'),
+                data: {},
+            });
+        }
+        uncomplicatedPlayerQueue.seekLength = 20;
+        while (!uncomplicatedPlayerQueue.isNextEmpty)
+            uncomplicatedPlayerQueue.pop();
+        for (let i = 0; i < 5; ++i) {
+            uncomplicatedPlayerQueue.push({
+                src: new URL('http://test.url/'),
+                data: {},
+            });
+        }
+        uncomplicatedPlayerQueue.seekLength = 0;
+        while (uncomplicatedPlayerQueue.next());
+        uncomplicatedPlayerQueue.seekLength = 3;
+        expect(uncomplicatedPlayerQueue.next()).toBe(null);
+        uncomplicatedPlayerQueue.reset();
+        expect(uncomplicatedPlayerQueue.next()).not.toBe(null);
+    });
+    /**
      * Add single track. Key should be zero since queue is empty.
      */
     test('Add one track', () => {
