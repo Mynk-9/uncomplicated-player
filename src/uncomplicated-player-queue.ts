@@ -8,10 +8,10 @@ import {
 /**
  * Queue mechanism:
  * For going next we simply create a flow from next till prev, picking the
- * track from next depends on shuffle state. To go back we create a reverse 
+ * track from next depends on shuffle state. To go back we create a reverse
  * flow and since we are using an object for next tracks, it is guaranteed
  * that if the tracks were shuffled initially they will get back to original
- * position. 
+ * position.
  *
  * current_track is object
  * next is map<key as string, track>
@@ -57,7 +57,7 @@ class UncomplicatedPlayerQueue {
         this.shuffleQueue = false;
         this.tracksKeyCounter = 0;
         this.seekSize = 3;
-        this.queueMutationCallback = () => {};
+        this.queueMutationCallback = (args: any[] | undefined): void => {};
     }
 
     /**
@@ -160,7 +160,7 @@ class UncomplicatedPlayerQueue {
         let key = ++this.tracksKeyCounter;
         this.queue.next[key.toString()] = { ...track, key: key };
         this.refreshQueue();
-        this.queueMutationCallback();
+        this.queueMutationCallback(['push']);
         return this.tracksKeyCounter;
     }
 
@@ -178,7 +178,7 @@ class UncomplicatedPlayerQueue {
             tracksAdded.push({ ...track, key: key });
         });
         this.refreshQueue();
-        this.queueMutationCallback();
+        this.queueMutationCallback(['pushMany']);
         return tracksAdded;
     }
 
@@ -196,12 +196,12 @@ class UncomplicatedPlayerQueue {
         } else if (this.queue.nextSeek.length > 0) {
             let key = this.queue.nextSeek[this.queue.nextSeek.length - 1].key;
             this.queue.nextSeek.pop();
-            this.queueMutationCallback();
+            this.queueMutationCallback(['pop']);
             return key;
         } else if (this.queue.curr) {
             let key = this.queue.curr.key;
             this.queue.curr = null;
-            this.queueMutationCallback();
+            this.queueMutationCallback(['pop']);
             return key;
         } else {
             return -1;
@@ -259,7 +259,7 @@ class UncomplicatedPlayerQueue {
         // refresh the queue for any problems
         this.refreshQueue();
 
-        this.queueMutationCallback();
+        this.queueMutationCallback(['remove']);
 
         return removedKeys;
     }
@@ -272,7 +272,7 @@ class UncomplicatedPlayerQueue {
         [this.queue.nextSeek, this.queue.history] = [[], []];
         this.queue.next = {};
         this.tracksKeyCounter = 0;
-        this.queueMutationCallback();
+        this.queueMutationCallback(['clear']);
     }
 
     /**
@@ -303,7 +303,7 @@ class UncomplicatedPlayerQueue {
         this.queue.nextSeek.splice(0, 1);
         delete this.queue.next[key];
 
-        this.queueMutationCallback(['shift', 1]);
+        this.queueMutationCallback(['next']);
 
         return this.queue.curr;
     }
@@ -334,7 +334,7 @@ class UncomplicatedPlayerQueue {
         // even though track is guaranteed to be not undefined
         if (track) this.queue.curr = track;
 
-        this.queueMutationCallback(['shift', -1]);
+        this.queueMutationCallback(['prev']);
 
         return this.queue.curr;
     }
@@ -364,7 +364,7 @@ class UncomplicatedPlayerQueue {
         this.queue.nextSeek = [];
 
         this.refreshQueue();
-        this.queueMutationCallback();
+        this.queueMutationCallback(['reset']);
     }
 
     /**
@@ -389,7 +389,7 @@ class UncomplicatedPlayerQueue {
     public set seekLength(len: number) {
         this.seekSize = len;
         this.refreshQueue();
-        this.queueMutationCallback();
+        this.queueMutationCallback(['seekLength']);
     }
 
     /**
@@ -398,7 +398,7 @@ class UncomplicatedPlayerQueue {
     public setDefaultSeekLength(): void {
         this.seekSize = 3;
         this.refreshQueue();
-        this.queueMutationCallback();
+        this.queueMutationCallback(['setDefaultSeekLength']);
     }
 
     /**
@@ -421,7 +421,7 @@ class UncomplicatedPlayerQueue {
         });
         this.queue.nextSeek = [];
         this.refreshQueue();
-        this.queueMutationCallback();
+        this.queueMutationCallback(['shuffle']);
     }
 
     /**

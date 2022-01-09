@@ -26,7 +26,7 @@ interface Queue {
  * Interface for mutation callback
  */
 interface QueueMutationCallback {
-    (args?: any[]): void;
+    (args: any[]): void;
 }
 
 /**
