@@ -1,26 +1,4 @@
-/**
- * Interface for queue track inputs.
- */
-interface PrimitiveTrack {
-    src: URL;
-    data: Record<string, any>;
-}
-/**
- * Interface for queue tracks.
- */
-interface Track extends PrimitiveTrack {
-    key: number;
-}
-
-/**
- * Interface for the Queue
- */
-interface Queue {
-    history: Track[];
-    curr: Track | null;
-    nextSeek: Track[];
-    next: { [key: string]: Track };
-}
+import { PrimitiveTrack, Track, Queue } from './uncomplicated-interfaces';
 
 /**
  * Queue mechanism:
