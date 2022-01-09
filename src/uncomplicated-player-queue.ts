@@ -1,31 +1,17 @@
-/**
- * Interface for queue track inputs.
- */
-interface PrimitiveTrack {
-    src: URL;
-    data: Record<string, any>;
-}
-/**
- * Interface for queue tracks.
- */
-interface Track extends PrimitiveTrack {
-    key: number;
-}
-
-/**
- * Interface for the Queue
- */
-interface Queue {
-    history: Track[];
-    curr: Track | null;
-    nextSeek: Track[];
-    next: { [key: string]: Track };
-}
+import {
+    PrimitiveTrack,
+    Track,
+    Queue,
+    QueueMutationCallback,
+} from './uncomplicated-interfaces';
 
 /**
  * Queue mechanism:
  * For going next we simply create a flow from next till prev, picking the
- * track from next depends on shuffle state.
+ * track from next depends on shuffle state. To go back we create a reverse 
+ * flow and since we are using an object for next tracks, it is guaranteed
+ * that if the tracks were shuffled initially they will get back to original
+ * position. 
  *
  * current_track is object
  * next is map<key as string, track>
@@ -33,7 +19,7 @@ interface Queue {
  *
  * [history]{current_track}[next_seek]{{next}}
  *  ^     ^                 ^       ^
- * [0     n]               [0       p]
+ * [0     n]               [0       m]
  *
  * next:
  *  1. history.push_back(current_track)
@@ -54,6 +40,12 @@ class UncomplicatedPlayerQueue {
     private shuffleQueue: boolean;
     private tracksKeyCounter: number;
     private seekSize: number;
+    // Mutation callback is called when any method called can mutate the
+    // queue, effectively changing current track, seeks or the history upto
+    // the seek size. Player is responsible to check for changes and adjust
+    // accordingly. Hints are provided in arguments if next/prev or
+    // in general a shifting is done.
+    private queueMutationCallback: QueueMutationCallback;
 
     constructor() {
         this.queue = {
@@ -65,6 +57,7 @@ class UncomplicatedPlayerQueue {
         this.shuffleQueue = false;
         this.tracksKeyCounter = 0;
         this.seekSize = 3;
+        this.queueMutationCallback = () => {};
     }
 
     /**
@@ -167,6 +160,7 @@ class UncomplicatedPlayerQueue {
         let key = ++this.tracksKeyCounter;
         this.queue.next[key.toString()] = { ...track, key: key };
         this.refreshQueue();
+        this.queueMutationCallback();
         return this.tracksKeyCounter;
     }
 
@@ -184,6 +178,7 @@ class UncomplicatedPlayerQueue {
             tracksAdded.push({ ...track, key: key });
         });
         this.refreshQueue();
+        this.queueMutationCallback();
         return tracksAdded;
     }
 
@@ -201,10 +196,12 @@ class UncomplicatedPlayerQueue {
         } else if (this.queue.nextSeek.length > 0) {
             let key = this.queue.nextSeek[this.queue.nextSeek.length - 1].key;
             this.queue.nextSeek.pop();
+            this.queueMutationCallback();
             return key;
         } else if (this.queue.curr) {
             let key = this.queue.curr.key;
             this.queue.curr = null;
+            this.queueMutationCallback();
             return key;
         } else {
             return -1;
@@ -262,6 +259,8 @@ class UncomplicatedPlayerQueue {
         // refresh the queue for any problems
         this.refreshQueue();
 
+        this.queueMutationCallback();
+
         return removedKeys;
     }
 
@@ -273,6 +272,7 @@ class UncomplicatedPlayerQueue {
         [this.queue.nextSeek, this.queue.history] = [[], []];
         this.queue.next = {};
         this.tracksKeyCounter = 0;
+        this.queueMutationCallback();
     }
 
     /**
@@ -303,6 +303,8 @@ class UncomplicatedPlayerQueue {
         this.queue.nextSeek.splice(0, 1);
         delete this.queue.next[key];
 
+        this.queueMutationCallback(['shift', 1]);
+
         return this.queue.curr;
     }
 
@@ -332,6 +334,8 @@ class UncomplicatedPlayerQueue {
         // even though track is guaranteed to be not undefined
         if (track) this.queue.curr = track;
 
+        this.queueMutationCallback(['shift', -1]);
+
         return this.queue.curr;
     }
 
@@ -360,6 +364,7 @@ class UncomplicatedPlayerQueue {
         this.queue.nextSeek = [];
 
         this.refreshQueue();
+        this.queueMutationCallback();
     }
 
     /**
@@ -384,6 +389,7 @@ class UncomplicatedPlayerQueue {
     public set seekLength(len: number) {
         this.seekSize = len;
         this.refreshQueue();
+        this.queueMutationCallback();
     }
 
     /**
@@ -392,6 +398,7 @@ class UncomplicatedPlayerQueue {
     public setDefaultSeekLength(): void {
         this.seekSize = 3;
         this.refreshQueue();
+        this.queueMutationCallback();
     }
 
     /**
@@ -414,6 +421,15 @@ class UncomplicatedPlayerQueue {
         });
         this.queue.nextSeek = [];
         this.refreshQueue();
+        this.queueMutationCallback();
+    }
+
+    /**
+     * Sets mutation callback replacing the previous one. End-developer should
+     * avoid using this setter.
+     */
+    public set _mutationCallback(newMutationCallback: QueueMutationCallback) {
+        this.queueMutationCallback = newMutationCallback;
     }
 }
 

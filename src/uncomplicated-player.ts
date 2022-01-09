@@ -1,18 +1,29 @@
-interface Players {
-    sourceNode: MediaElementAudioSourceNode;
-    gainNode: GainNode;
+import { Players } from './uncomplicated-interfaces';
+import UncomplicatedPlayerQueue from './uncomplicated-player-queue';
+interface UncomplicatedPlayer {
+    play(): boolean;
+    volIncrease(): number;
+    volDecrease(): number;
+    get queue(): UncomplicatedPlayerQueue;
 }
 
 const UncomplicatedPlayer = (() => {
     /// instance of the player
-    let instance: object;
+    let instance: UncomplicatedPlayer;
 
-    const init = (latencyMode: AudioContextLatencyCategory = 'playback') => {
+    const init = (
+        latencyMode: AudioContextLatencyCategory = 'playback'
+    ): UncomplicatedPlayer => {
+        // setting up audio context
         let AudioContext = window.AudioContext;
         const audioContext = new AudioContext({
             latencyHint: latencyMode,
         });
 
+        // setting up queue
+        let ucpQueue = new UncomplicatedPlayerQueue();
+
+        // setting up players
         let playersCount: number = 3;
         let globalGain: number = 1.0;
         let players: Players[] = Array<Players>(playersCount);
@@ -26,7 +37,20 @@ const UncomplicatedPlayer = (() => {
             players[i].gainNode.gain.value = globalGain;
         }
 
-        return {};
+        return {
+            play: (): boolean => {
+                return true;
+            },
+            volIncrease: (): number => {
+                return 1.0;
+            },
+            volDecrease: (): number => {
+                return 1.0;
+            },
+            get queue() {
+                return ucpQueue;
+            },
+        };
     };
 
     return {
@@ -48,12 +72,12 @@ const UncomplicatedPlayer = (() => {
 
         /**
          * Gets the already existing instance of UncomplicatedPlayer or creates
-         * new instance if no existing instance is present. New instance 
+         * new instance if no existing instance is present. New instance
          * created with default parameters. Use initInstance to modify initial
          * params.
          * @returns UncomplicatedPlayer instance
          */
-        getInstance: () => {
+        getInstance: (): UncomplicatedPlayer => {
             if (!instance) instance = init();
             return instance;
         },
