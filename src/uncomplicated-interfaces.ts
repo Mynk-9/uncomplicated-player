@@ -22,4 +22,19 @@ interface Queue {
     next: { [key: string]: Track };
 }
 
-export { Queue as Queue, Track as Track, PrimitiveTrack as PrimitiveTrack };
+/**
+ * Interface for mutation callback
+ */
+interface QueueMutationCallback {
+    (args?: any[]): void;
+}
+
+/**
+ * Interface for the individual players being used in player.
+ */
+interface Players {
+    sourceNode: MediaElementAudioSourceNode;
+    gainNode: GainNode;
+}
+
+export { Queue, Track, PrimitiveTrack, Players, QueueMutationCallback };
