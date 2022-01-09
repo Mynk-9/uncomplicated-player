@@ -8,7 +8,10 @@ import {
 /**
  * Queue mechanism:
  * For going next we simply create a flow from next till prev, picking the
- * track from next depends on shuffle state.
+ * track from next depends on shuffle state. To go back we create a reverse 
+ * flow and since we are using an object for next tracks, it is guaranteed
+ * that if the tracks were shuffled initially they will get back to original
+ * position. 
  *
  * current_track is object
  * next is map<key as string, track>
@@ -16,7 +19,7 @@ import {
  *
  * [history]{current_track}[next_seek]{{next}}
  *  ^     ^                 ^       ^
- * [0     n]               [0       p]
+ * [0     n]               [0       m]
  *
  * next:
  *  1. history.push_back(current_track)
