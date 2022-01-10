@@ -1,3 +1,4 @@
+import { PrimitiveTrack } from '../src/uncomplicated-interfaces';
 import UncomplicatedPlayerQueue from '../src/uncomplicated-player-queue';
 
 let uncomplicatedPlayerQueue = new UncomplicatedPlayerQueue();
@@ -19,6 +20,7 @@ describe('Uncomplicated Player Queue tests', () => {
         expect(uncomplicatedPlayerQueue.isNextEmpty).toBe(true);
         expect(uncomplicatedPlayerQueue.isPrevEmpty).toBe(true);
     });
+
     /**
      * Adjusting seek length in between operation.
      * 1. Clear queue. Default the seek length. Add 10 tracks.
@@ -57,6 +59,7 @@ describe('Uncomplicated Player Queue tests', () => {
         uncomplicatedPlayerQueue.reset();
         expect(uncomplicatedPlayerQueue.next()).not.toBe(null);
     });
+
     /**
      * Add single track. Key should be zero since queue is empty.
      */
@@ -189,5 +192,77 @@ describe('Uncomplicated Player Queue tests', () => {
             shuffleKeysSet.add(uncomplicatedPlayerQueue.next()?.key || -1);
 
         expect([...shuffleKeysSet].sort()).toStrictEqual([...keysSet].sort());
+    });
+
+    /**
+     * 1. Set mutation callback. Check on every next step.
+     * 2. Disable shuffle. Clear the queue.
+     * 3. Set seek length default.
+     * 4. Add 1 track.
+     * 5. Add 9 tracks with dummy data for filter.
+     * 6. Remove the 9 tracks.
+     * 7. Add 4 tracks.
+     * 8. Go next x3.
+     * 9. Go prev x1.
+     * 10. Reset queue.
+     * 11. Enable shuffle.
+     */
+    test('Mutation callback test', () => {
+        let arg: string = '';
+        uncomplicatedPlayerQueue._mutationCallback = args => {
+            arg = String(args[0]);
+        };
+
+        uncomplicatedPlayerQueue.shuffle = false;
+        uncomplicatedPlayerQueue.clear();
+        expect(arg).toBe('clear');
+
+        uncomplicatedPlayerQueue.setDefaultSeekLength();
+        expect(arg).toBe('setDefaultSeekLength');
+
+        uncomplicatedPlayerQueue.push({
+            src: new URL('http://test.url/'),
+            data: {},
+        });
+        expect(arg).toBe('push');
+
+        let tracks: PrimitiveTrack[] = [];
+        for (let i = 0; i < 9; ++i) {
+            tracks.push({
+                src: new URL('http://test.url'),
+                data: {
+                    filter: ':)',
+                },
+            });
+        }
+        uncomplicatedPlayerQueue.pushMany(tracks);
+        expect(arg).toBe('pushMany');
+
+        uncomplicatedPlayerQueue.remove({
+            data: {
+                filter: ':)',
+            },
+        });
+        expect(arg).toBe('remove');
+
+        for (let i = 0; i < 4; ++i) {
+            uncomplicatedPlayerQueue.push({
+                src: new URL('http://test/url'),
+                data: {},
+            });
+        }
+        uncomplicatedPlayerQueue.next();
+        uncomplicatedPlayerQueue.next();
+        uncomplicatedPlayerQueue.next();
+        expect(arg).toBe('next');
+
+        uncomplicatedPlayerQueue.prev();
+        expect(arg).toBe('prev');
+
+        uncomplicatedPlayerQueue.reset();
+        expect(arg).toBe('reset');
+
+        uncomplicatedPlayerQueue.shuffle = true;
+        expect(arg).toBe('shuffle');
     });
 });
