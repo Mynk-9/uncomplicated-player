@@ -139,6 +139,50 @@ const UncomplicatedPlayer = (() => {
             });
         };
 
+        // function called every time queue is mutated, makes sure queue and
+        // player are on the same page.
+        const queueMutationCallback: QueueMutationCallback = (args: any[]) => {
+            // TODO: complete this implementation
+            if (!args) return;
+
+            switch (args[0]) {
+                case 'push':
+                case 'pushMany':
+                case 'pop':
+                case 'remove':
+                    break;
+                case 'clear':
+                    break;
+                case 'next': {
+                    let oldIndex = _currentPlayer;
+                    playerCycleNext();
+                    let newIndex = _currentPlayer;
+                    switchPlayers(oldIndex, newIndex);
+                    updatePrefetch();
+                    break;
+                }
+                case 'prev': {
+                    let oldIndex = _currentPlayer;
+                    playerCyclePrev();
+                    let newIndex = _currentPlayer;
+                    switchPlayers(oldIndex, newIndex);
+                    updatePrefetch();
+                    break;
+                }
+                case 'reset':
+                    break;
+                case 'seekLength':
+                    break;
+                case 'setDefaultSeekLength':
+                    break;
+                case 'shuffle':
+                    break;
+                default:
+                    return;
+            }
+        };
+
+        // inits all the players
         const initPlayers = () => {
             for (let i = 0; i < playersCount; ++i) {
                 players[i] = {
@@ -157,10 +201,12 @@ const UncomplicatedPlayer = (() => {
             }
         };
 
+        // inits the queue, sets up mutation callback etc.
         const initQueue = () => {
             ucpQueue._mutationCallback = queueMutationCallback;
         };
 
+        // adjust players array when prefetch size is changed
         const adjustPlayers = () => {
             // TODO: implement to adjust players array when
             // playersCount (= 2 x prefetch_size + 1) is changed
