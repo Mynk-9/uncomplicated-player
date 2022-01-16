@@ -53,7 +53,7 @@ const UncomplicatedPlayer = (() => {
         let ucpQueue = new UncomplicatedPlayerQueue();
 
         // setting up players
-        let playersCount: number = 3;
+        let playersCount: number = 7; // = 2 x prefetch_size + 1
         let globalGain: number = 1.0;
         let players: Players[] = Array<Players>(playersCount);
 
