@@ -156,8 +156,13 @@ const UncomplicatedPlayer = (() => {
             },
             set prefetch(params: { enabled: boolean; size?: number }) {
                 _prefetch = params.enabled;
-                if (params.enabled && params.size) _prefetchSize = params.size;
-                else if (params.enabled) _prefetchSize = _defaultPrefetchSize;
+                if (params.enabled && params.size) {
+                    _prefetchSize = params.size;
+                    ucpQueue.seekLength = params.size;
+                } else if (params.enabled) {
+                    _prefetchSize = _defaultPrefetchSize;
+                    ucpQueue.seekLength = _defaultPrefetchSize;
+                }
 
                 adjustPlayers();
             },
