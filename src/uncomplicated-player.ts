@@ -1,10 +1,11 @@
-import { Players } from './uncomplicated-interfaces';
+import { Players, QueueMutationCallback } from './uncomplicated-interfaces';
 import UncomplicatedPlayerQueue from './uncomplicated-player-queue';
 interface UncomplicatedPlayer {
     play(): boolean;
     volIncrease(): number;
     volDecrease(): number;
     get queue(): UncomplicatedPlayerQueue;
+    set prefetch(prefetchVal: boolean);
 }
 
 const UncomplicatedPlayer = (() => {
@@ -14,6 +15,10 @@ const UncomplicatedPlayer = (() => {
     const init = (
         latencyMode: AudioContextLatencyCategory = 'playback'
     ): UncomplicatedPlayer => {
+        ///////////////////////////////
+        ///////////////////////////////
+        ////// private variables //////
+
         // setting up audio context
         let AudioContext = window.AudioContext;
         const audioContext = new AudioContext({
@@ -27,15 +32,29 @@ const UncomplicatedPlayer = (() => {
         let playersCount: number = 3;
         let globalGain: number = 1.0;
         let players: Players[] = Array<Players>(playersCount);
-        for (let i = 0; i < playersCount; ++i) {
-            players[i] = {
-                sourceNode: audioContext.createMediaElementSource(new Audio()),
-                gainNode: audioContext.createGain(),
-            };
-            players[i].sourceNode.connect(players[i].gainNode);
-            players[i].gainNode.connect(audioContext.destination);
-            players[i].gainNode.gain.value = globalGain;
-        }
+
+        // state variables
+        let _prefetch: boolean = true;
+        let _prefetchSize: number = 3;
+
+        ///////////////////////////////
+        ///////////////////////////////
+        ////// private functions //////
+
+        const initPlayers = () => {
+            for (let i = 0; i < playersCount; ++i) {
+                if (players[i]) continue;
+                players[i] = {
+                    sourceNode: audioContext.createMediaElementSource(
+                        new Audio()
+                    ),
+                    gainNode: audioContext.createGain(),
+                };
+                players[i].sourceNode.connect(players[i].gainNode);
+                players[i].gainNode.connect(audioContext.destination);
+                players[i].gainNode.gain.value = globalGain;
+            }
+        };
 
         return {
             play: (): boolean => {
@@ -49,6 +68,10 @@ const UncomplicatedPlayer = (() => {
             },
             get queue() {
                 return ucpQueue;
+            },
+            set prefetch(prefetchVal: boolean) {
+                _prefetch = prefetchVal;
+                ucpQueue.seekLength = _prefetchSize;
             },
         };
     };
