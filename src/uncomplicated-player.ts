@@ -5,7 +5,8 @@ interface UncomplicatedPlayer {
     volIncrease(): number;
     volDecrease(): number;
     get queue(): UncomplicatedPlayerQueue;
-    set prefetch(prefetchVal: boolean);
+    get prefetch(): { enabled: boolean; size?: number };
+    set prefetch(params: { enabled: boolean; size?: number });
 }
 
 /**
@@ -62,7 +63,8 @@ const UncomplicatedPlayer = (() => {
 
         // player state variables
         let _prefetch: boolean = true;
-        let _prefetchSize: number = 3;
+        const _defaultPrefetchSize: number = 3;
+        let _prefetchSize: number = _defaultPrefetchSize;
 
         ///////////////////////////////
         ///////////////////////////////
@@ -70,7 +72,6 @@ const UncomplicatedPlayer = (() => {
 
         const initPlayers = () => {
             for (let i = 0; i < playersCount; ++i) {
-                if (players[i]) continue;
                 players[i] = {
                     sourceNode: audioContext.createMediaElementSource(
                         new Audio()
@@ -89,6 +90,11 @@ const UncomplicatedPlayer = (() => {
 
         const initQueue = () => {
             ucpQueue._mutationCallback = queueMutationCallback;
+        };
+
+        const adjustPlayers = () => {
+            // TODO: implement to adjust players array when
+            // playersCount (= 2 x prefetch_size + 1) is changed
         };
 
         // return array of next players
@@ -143,9 +149,17 @@ const UncomplicatedPlayer = (() => {
             get queue() {
                 return ucpQueue;
             },
-            set prefetch(prefetchVal: boolean) {
-                _prefetch = prefetchVal;
-                ucpQueue.seekLength = _prefetchSize;
+            get prefetch(): { enabled: boolean; size?: number } {
+                if (_prefetch)
+                    return { enabled: _prefetch, size: _prefetchSize };
+                return { enabled: false };
+            },
+            set prefetch(params: { enabled: boolean; size?: number }) {
+                _prefetch = params.enabled;
+                if (params.enabled && params.size) _prefetchSize = params.size;
+                else if (params.enabled) _prefetchSize = _defaultPrefetchSize;
+
+                adjustPlayers();
             },
         };
     };
