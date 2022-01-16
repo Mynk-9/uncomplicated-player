@@ -132,6 +132,30 @@ const UncomplicatedPlayer = (() => {
                 _currentPlayer > 0 ? _currentPlayer - 1 : playersCount - 1;
         };
 
+        // updates prefetch according to queue mutations
+        const updatePrefetch = () => {
+            let { next: nextSeek, prev: prevSeek } = ucpQueue.seek;
+            let nextPlayers: number[] = getNextPlayers();
+            let prevPlayers: number[] = getPrevPlayers();
+
+            nextPlayers.forEach((playerIndex, i) => {
+                if (
+                    players[playerIndex].sourceNode.mediaElement.src !==
+                    nextSeek[i].src.toString()
+                )
+                    players[playerIndex].sourceNode.mediaElement.src =
+                        nextSeek[i].src.toString();
+            });
+            prevPlayers.forEach((playerIndex, i) => {
+                if (
+                    players[playerIndex].sourceNode.mediaElement.src !==
+                    prevSeek[i].src.toString()
+                )
+                    players[playerIndex].sourceNode.mediaElement.src =
+                        prevSeek[i].src.toString();
+            });
+        };
+
         ///////////////////////////////
         ///////////////////////////////
         ////// public functions ///////
