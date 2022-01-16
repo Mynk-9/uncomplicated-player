@@ -74,8 +74,10 @@ const UncomplicatedPlayer = (() => {
         ////// private functions //////
 
         // switch from player1 to player2 according to various configs
-        const switchPlayers = (index1: number, index2: number) => {
-            // TODO: implement switching
+        const switchPlayers = (oldIndex: number, newIndex: number) => {
+            // TODO: implement crossfading
+            players[oldIndex].sourceNode.mediaElement.pause();
+            players[newIndex].sourceNode.mediaElement.play();
         };
 
         // return array of next players
