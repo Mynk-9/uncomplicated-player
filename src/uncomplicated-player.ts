@@ -57,7 +57,10 @@ const UncomplicatedPlayer = (() => {
         let globalGain: number = 1.0;
         let players: Players[] = Array<Players>(playersCount);
 
-        // state variables
+        // players cycling variables
+        let _currentPlayer = 0;
+
+        // player state variables
         let _prefetch: boolean = true;
         let _prefetchSize: number = 3;
 
@@ -75,9 +78,17 @@ const UncomplicatedPlayer = (() => {
                     gainNode: audioContext.createGain(),
                 };
                 players[i].sourceNode.connect(players[i].gainNode);
+                // allow cors
+                players[i].sourceNode.mediaElement.crossOrigin = 'anonymous';
+                // enable prefetch of track
+                players[i].sourceNode.mediaElement.preload = 'auto';
                 players[i].gainNode.connect(audioContext.destination);
                 players[i].gainNode.gain.value = globalGain;
             }
+        };
+
+        const initQueue = () => {
+            ucpQueue._mutationCallback = queueMutationCallback;
         };
 
         // return array of next players
