@@ -80,6 +80,45 @@ const UncomplicatedPlayer = (() => {
             }
         };
 
+        // return array of next players
+        const getNextPlayers = (): number[] => {
+            let indexes: number[] = [];
+            for (let i = 1; i <= _prefetchSize; ++i) {
+                indexes.push(
+                    _currentPlayer + i < playersCount
+                        ? _currentPlayer + i
+                        : (_currentPlayer + i) % playersCount
+                );
+            }
+            return indexes;
+        };
+        // get array of prev players
+        const getPrevPlayers = (): number[] => {
+            let indexes: number[] = [];
+            for (let i = 1; i <= _prefetchSize; ++i) {
+                indexes.push(
+                    _currentPlayer - i >= 0
+                        ? _currentPlayer - i
+                        : _currentPlayer - i + playersCount
+                );
+            }
+            return indexes;
+        };
+        // players cycle forward
+        const playerCycleNext = () => {
+            _currentPlayer =
+                _currentPlayer < playersCount - 1 ? _currentPlayer + 1 : 0;
+        };
+        // players cycle back
+        const playerCyclePrev = () => {
+            _currentPlayer =
+                _currentPlayer > 0 ? _currentPlayer - 1 : playersCount - 1;
+        };
+
+        ///////////////////////////////
+        ///////////////////////////////
+        ////// public functions ///////
+
         return {
             play: (): boolean => {
                 return true;
