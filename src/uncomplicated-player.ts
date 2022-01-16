@@ -55,8 +55,11 @@ const UncomplicatedPlayer = (() => {
 
         // setting up players
         let playersCount: number = 7; // = 2 x prefetch_size + 1
-        let globalGain: number = 1.0;
         let players: Players[] = Array<Players>(playersCount);
+
+        // global players states
+        let globalPlay: boolean = false;
+        let globalGain: number = 1.0;
 
         // players cycling variables
         let _currentPlayer = 0;
@@ -70,31 +73,9 @@ const UncomplicatedPlayer = (() => {
         ///////////////////////////////
         ////// private functions //////
 
-        const initPlayers = () => {
-            for (let i = 0; i < playersCount; ++i) {
-                players[i] = {
-                    sourceNode: audioContext.createMediaElementSource(
-                        new Audio()
-                    ),
-                    gainNode: audioContext.createGain(),
-                };
-                players[i].sourceNode.connect(players[i].gainNode);
-                // allow cors
-                players[i].sourceNode.mediaElement.crossOrigin = 'anonymous';
-                // enable prefetch of track
-                players[i].sourceNode.mediaElement.preload = 'auto';
-                players[i].gainNode.connect(audioContext.destination);
-                players[i].gainNode.gain.value = globalGain;
-            }
-        };
-
-        const initQueue = () => {
-            ucpQueue._mutationCallback = queueMutationCallback;
-        };
-
-        const adjustPlayers = () => {
-            // TODO: implement to adjust players array when
-            // playersCount (= 2 x prefetch_size + 1) is changed
+        // switch from player1 to player2 according to various configs
+        const switchPlayers = (index1: number, index2: number) => {
+            // TODO: implement switching
         };
 
         // return array of next players
@@ -154,6 +135,33 @@ const UncomplicatedPlayer = (() => {
                     players[playerIndex].sourceNode.mediaElement.src =
                         prevSeek[i].src.toString();
             });
+        };
+
+        const initPlayers = () => {
+            for (let i = 0; i < playersCount; ++i) {
+                players[i] = {
+                    sourceNode: audioContext.createMediaElementSource(
+                        new Audio()
+                    ),
+                    gainNode: audioContext.createGain(),
+                };
+                players[i].sourceNode.connect(players[i].gainNode);
+                // allow cors
+                players[i].sourceNode.mediaElement.crossOrigin = 'anonymous';
+                // enable prefetch of track
+                players[i].sourceNode.mediaElement.preload = 'auto';
+                players[i].gainNode.connect(audioContext.destination);
+                players[i].gainNode.gain.value = globalGain;
+            }
+        };
+
+        const initQueue = () => {
+            ucpQueue._mutationCallback = queueMutationCallback;
+        };
+
+        const adjustPlayers = () => {
+            // TODO: implement to adjust players array when
+            // playersCount (= 2 x prefetch_size + 1) is changed
         };
 
         ///////////////////////////////
