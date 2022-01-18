@@ -183,6 +183,19 @@ class UncomplicatedPlayerQueue {
     }
 
     /**
+     * Adds a track next up instead of queue end.
+     * @param {PrimitiveTrack} track track to be added next
+     * @returns {number} key of added track
+     */
+    public addNext(track: PrimitiveTrack): number {
+        let key = ++this.tracksKeyCounter;
+        this.queue.nextSeek = [{ ...track, key: key }, ...this.queue.nextSeek];
+        this.refreshQueue();
+        this.queueMutationCallback(['addNext']);
+        return key;
+    }
+
+    /**
      * Removes the last track from the queue. Removes present track if it is
      * the last track.
      * @returns key of the removed track, if no track exists then -1
