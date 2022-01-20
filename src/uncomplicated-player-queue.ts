@@ -134,6 +134,7 @@ class UncomplicatedPlayerQueue {
         //      if seek length is 0 and next has tracks:
         //          add track from next
         //      else add from nextSeek and readjust nextSeek
+        // note: if nextSeek is empty then current will get null value
         if (!this.queue.curr) {
             let keys = Object.keys(this.queue.next);
             if (this.seekSize === 0 && keys.length > 0) {

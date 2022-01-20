@@ -76,6 +76,7 @@ const UncomplicatedPlayer = (() => {
         // switch from player1 to player2 according to various configs
         const switchPlayers = (oldIndex: number, newIndex: number) => {
             // TODO: implement crossfading
+            if (oldIndex === newIndex) return;
             players[oldIndex].sourceNode.mediaElement.pause();
             players[newIndex].sourceNode.mediaElement.play();
         };
