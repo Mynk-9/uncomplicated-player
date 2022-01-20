@@ -146,6 +146,12 @@ const UncomplicatedPlayer = (() => {
             // TODO: complete this implementation
             if (!args) return;
 
+            let oldCurrentIndex: number = _currentPlayer;
+            let oldCurrentSrc: string =
+                players[_currentPlayer].sourceNode.mediaElement.src;
+            let newCurrentIndex: number = oldCurrentIndex;
+            let newCurrentSrc: string = oldCurrentSrc;
+
             switch (args[0]) {
                 case 'push':
                 case 'pushMany':
@@ -155,19 +161,13 @@ const UncomplicatedPlayer = (() => {
                 case 'clear':
                     break;
                 case 'next': {
-                    let oldIndex = _currentPlayer;
                     playerCycleNext();
-                    let newIndex = _currentPlayer;
-                    switchPlayers(oldIndex, newIndex);
-                    updatePrefetch();
+                    newCurrentIndex = _currentPlayer;
                     break;
                 }
                 case 'prev': {
-                    let oldIndex = _currentPlayer;
                     playerCyclePrev();
-                    let newIndex = _currentPlayer;
-                    switchPlayers(oldIndex, newIndex);
-                    updatePrefetch();
+                    newCurrentIndex = _currentPlayer;
                     break;
                 }
                 case 'reset':
@@ -181,6 +181,9 @@ const UncomplicatedPlayer = (() => {
                 default:
                     return;
             }
+
+            switchPlayers(oldCurrentIndex, newCurrentIndex);
+            updatePrefetch();
         };
 
         // inits all the players
