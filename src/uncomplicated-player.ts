@@ -7,6 +7,9 @@ interface UncomplicatedPlayer {
     get queue(): UncomplicatedPlayerQueue;
     get prefetch(): { enabled: boolean; size?: number };
     set prefetch(params: { enabled: boolean; size?: number });
+    get logging(): boolean;
+    set logging(enableLogging: boolean);
+    set logger(func: { (log: string): void });
 }
 
 /**
@@ -69,9 +72,23 @@ const UncomplicatedPlayer = (() => {
         const _defaultPrefetchSize: number = 3;
         let _prefetchSize: number = _defaultPrefetchSize;
 
+        // logging state and method
+        let loggingState: boolean = false;
+        let logger: { (log: string): void } = () => {};
+
         ///////////////////////////////
         ///////////////////////////////
         ////// private functions //////
+
+        // logging utility
+        const makeLog = (log: string, ...params: any[]) => {
+            if (loggingState) {
+                logger(log);
+                params.forEach(param => {
+                    logger('' + param);
+                });
+            }
+        };
 
         // create new player
         const createPlayer = (): Players => {
@@ -331,6 +348,15 @@ const UncomplicatedPlayer = (() => {
                 }
 
                 adjustPlayers();
+            },
+            get logging(): boolean {
+                return loggingState;
+            },
+            set logging(loggingEnabled: boolean) {
+                loggingState = loggingEnabled;
+            },
+            set logger(func: { (log: string): void }) {
+                logger = func;
             },
         };
     };
