@@ -410,13 +410,9 @@ class UncomplicatedPlayerQueue {
      * Get the next and previous seeks.
      */
     public get seek(): { next: Track[]; prev: Track[] } {
-        let nextSeek: Track[] = [];
+        let nextSeek: Track[] = this.queue.nextSeek;
         let prevSeek: Track[] = [];
         let prevSeekSize = Math.min(this.seekSize, this.queue.history.length);
-
-        this.queue.nextSeek.forEach(track => {
-            nextSeek.push(track);
-        });
 
         for (let i = 1; i <= prevSeekSize; ++i)
             prevSeek.push(this.queue.history[this.queue.history.length - i]);
