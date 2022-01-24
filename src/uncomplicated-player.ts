@@ -104,12 +104,15 @@ const UncomplicatedPlayer = (() => {
             newPlayer.gainNode.connect(audioContext.destination);
             newPlayer.gainNode.gain.value = globalGain;
 
+            makeLog('createPlayer');
+
             return newPlayer;
         };
 
         // init the players
         const initPlayers = () => {
             for (let i = 0; i < playersCount; ++i) players[i] = createPlayer();
+            makeLog(`initPlayers - ${0}-${playersCount}`);
         };
 
         // stops the player(s); pauses the MediaElementAudioSourceNode
@@ -119,7 +122,11 @@ const UncomplicatedPlayer = (() => {
                 players.forEach(player =>
                     player.sourceNode.mediaElement.pause()
                 );
-            } else players[index].sourceNode.mediaElement.pause();
+                makeLog('playerStop - all');
+            } else {
+                players[index].sourceNode.mediaElement.pause();
+                makeLog(`playerStop - ${index}`);
+            }
         };
 
         // switch from player1 to player2 according to various configs
@@ -128,6 +135,7 @@ const UncomplicatedPlayer = (() => {
             if (oldIndex === newIndex) return;
             players[oldIndex].sourceNode.mediaElement.pause();
             players[newIndex].sourceNode.mediaElement.play();
+            makeLog(`switchPlayers - ${oldIndex}<>${newIndex}`);
         };
 
         // return array of next players
@@ -140,6 +148,7 @@ const UncomplicatedPlayer = (() => {
                         : (_currentPlayer + i) % playersCount
                 );
             }
+            makeLog(`getNextPlayers`);
             return indexes;
         };
         // get array of prev players
@@ -152,17 +161,20 @@ const UncomplicatedPlayer = (() => {
                         : _currentPlayer - i + playersCount
                 );
             }
+            makeLog('getPrevPlayers - ', indexes);
             return indexes;
         };
         // players cycle forward
         const playerCycleNext = () => {
             _currentPlayer =
                 _currentPlayer < playersCount - 1 ? _currentPlayer + 1 : 0;
+            makeLog(`playerCycleNext - current-${_currentPlayer}`);
         };
         // players cycle back
         const playerCyclePrev = () => {
             _currentPlayer =
                 _currentPlayer > 0 ? _currentPlayer - 1 : playersCount - 1;
+            makeLog(`playerCyclePrev - current-${_currentPlayer}`);
         };
 
         // updates prefetch according to queue mutations
@@ -193,6 +205,8 @@ const UncomplicatedPlayer = (() => {
                     players[playerIndex].sourceNode.mediaElement.src =
                         prevSeek[i].src.toString();
             });
+
+            makeLog('updatePrefetch');
         };
 
         // adjust players array when prefetch size is changed
@@ -216,6 +230,8 @@ const UncomplicatedPlayer = (() => {
 
             _prefetchSize = ucpQueue.seekLength;
             playersCount = 2 * _prefetchSize + 1;
+
+            makeLog(`adjustPlayers - ${players.length}`);
         };
 
         // function called every time queue is mutated, makes sure queue and
@@ -242,10 +258,12 @@ const UncomplicatedPlayer = (() => {
                         players[_currentPlayer].sourceNode.mediaElement.src =
                             ucpQueue.current.src.toString();
                     }
+                    makeLog('Mutation callback - push/pushMany');
                     break;
                 }
                 case 'addNext': {
                     // simply need to update the prefetch
+                    makeLog('Mutation callback - addNext');
                     break;
                 }
                 case 'pop':
@@ -255,6 +273,7 @@ const UncomplicatedPlayer = (() => {
                     if (!ucpQueue.current) playerStop();
                     // else just update the prefetch and keep intact current
                     // player index
+                    makeLog('Mutation callback - pop/remove');
                     break;
                 }
                 case 'clear':
@@ -262,17 +281,20 @@ const UncomplicatedPlayer = (() => {
                     // and clear the prefetch
                     playerStop();
                     players[_currentPlayer].sourceNode.mediaElement.src = '';
+                    makeLog('Mutation callback - clear');
                     break;
                 case 'next': {
                     // cycle to next and update prefetch
                     playerCycleNext();
                     newCurrentIndex = _currentPlayer;
+                    makeLog('Mutation callback - next');
                     break;
                 }
                 case 'prev': {
                     // cycle to next and update prefetch
                     playerCyclePrev();
                     newCurrentIndex = _currentPlayer;
+                    makeLog('Mutation callback - prev');
                     break;
                 }
                 case 'reset': {
@@ -283,19 +305,25 @@ const UncomplicatedPlayer = (() => {
                     else
                         players[_currentPlayer].sourceNode.mediaElement.src =
                             '';
+                    makeLog('Mutation callback - reset');
                     break;
                 }
                 case 'seekLength':
                 case 'setDefaultSeekLength': {
                     // adjust players array and prefetch
                     adjustPlayers();
+                    makeLog(
+                        'Mutation callback - seekLength/setDefaultSeekLength'
+                    );
                     break;
                 }
                 case 'shuffle':
                     // simply update the prefetch
+                    makeLog('Mutation callback - shuffle');
                     break;
                 default:
                     // nothing to do
+                    makeLog('Mutation callback - illegal operation');
                     return;
             }
 
@@ -306,6 +334,7 @@ const UncomplicatedPlayer = (() => {
         // inits the queue, sets up mutation callback etc.
         const initQueue = () => {
             ucpQueue._mutationCallback = queueMutationCallback;
+            makeLog('initQueue');
         };
 
         ///////////////////////////////
@@ -321,12 +350,15 @@ const UncomplicatedPlayer = (() => {
 
         return {
             play: (): boolean => {
+                makeLog('play');
                 return true;
             },
             volIncrease: (): number => {
+                makeLog('volIncrease');
                 return 1.0;
             },
             volDecrease: (): number => {
+                makeLog('volDecrease');
                 return 1.0;
             },
             get queue() {
@@ -346,6 +378,8 @@ const UncomplicatedPlayer = (() => {
                     _prefetchSize = _defaultPrefetchSize;
                     ucpQueue.seekLength = _defaultPrefetchSize;
                 }
+
+                makeLog('set prefetch');
 
                 adjustPlayers();
             },
