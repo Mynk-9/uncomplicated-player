@@ -154,8 +154,12 @@ const UncomplicatedPlayer = (() => {
             let nextPlayers: number[] = getNextPlayers();
             let prevPlayers: number[] = getPrevPlayers();
 
+            // if queue has nulls then we set blank src to Audio Source node
+
             nextPlayers.forEach((playerIndex, i) => {
-                if (
+                if (!nextSeek[i])
+                    players[playerIndex].sourceNode.mediaElement.src = '';
+                else if (
                     players[playerIndex].sourceNode.mediaElement.src !==
                     nextSeek[i].src.toString()
                 )
@@ -163,7 +167,9 @@ const UncomplicatedPlayer = (() => {
                         nextSeek[i].src.toString();
             });
             prevPlayers.forEach((playerIndex, i) => {
-                if (
+                if (!prevSeek[i])
+                    players[playerIndex].sourceNode.mediaElement.src = '';
+                else if (
                     players[playerIndex].sourceNode.mediaElement.src !==
                     prevSeek[i].src.toString()
                 )
