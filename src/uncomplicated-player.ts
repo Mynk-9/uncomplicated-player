@@ -73,6 +73,23 @@ const UncomplicatedPlayer = (() => {
         ///////////////////////////////
         ////// private functions //////
 
+        // create new player
+        const createPlayer = (): Players => {
+            let newPlayer = {
+                sourceNode: audioContext.createMediaElementSource(new Audio()),
+                gainNode: audioContext.createGain(),
+            };
+            newPlayer.sourceNode.connect(newPlayer.gainNode);
+            // allow cors
+            newPlayer.sourceNode.mediaElement.crossOrigin = 'anonymous';
+            // enable prefetch of track
+            newPlayer.sourceNode.mediaElement.preload = 'auto';
+            newPlayer.gainNode.connect(audioContext.destination);
+            newPlayer.gainNode.gain.value = globalGain;
+
+            return newPlayer;
+        };
+
         // switch from player1 to player2 according to various configs
         const switchPlayers = (oldIndex: number, newIndex: number) => {
             // TODO: implement crossfading
