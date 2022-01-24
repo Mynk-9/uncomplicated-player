@@ -90,6 +90,21 @@ const UncomplicatedPlayer = (() => {
             return newPlayer;
         };
 
+        // init the players
+        const initPlayers = () => {
+            for (let i = 0; i < playersCount; ++i) players[i] = createPlayer();
+        };
+
+        // stops the player(s); pauses the MediaElementAudioSourceNode
+        // stops all players if index not provided
+        const playerStop = (index?: number) => {
+            if (!index) {
+                players.forEach(player =>
+                    player.sourceNode.mediaElement.pause()
+                );
+            } else players[index].sourceNode.mediaElement.pause();
+        };
+
         // switch from player1 to player2 according to various configs
         const switchPlayers = (oldIndex: number, newIndex: number) => {
             // TODO: implement crossfading
@@ -201,25 +216,6 @@ const UncomplicatedPlayer = (() => {
 
             switchPlayers(oldCurrentIndex, newCurrentIndex);
             updatePrefetch();
-        };
-
-        // inits all the players
-        const initPlayers = () => {
-            for (let i = 0; i < playersCount; ++i) {
-                players[i] = {
-                    sourceNode: audioContext.createMediaElementSource(
-                        new Audio()
-                    ),
-                    gainNode: audioContext.createGain(),
-                };
-                players[i].sourceNode.connect(players[i].gainNode);
-                // allow cors
-                players[i].sourceNode.mediaElement.crossOrigin = 'anonymous';
-                // enable prefetch of track
-                players[i].sourceNode.mediaElement.preload = 'auto';
-                players[i].gainNode.connect(audioContext.destination);
-                players[i].gainNode.gain.value = globalGain;
-            }
         };
 
         // inits the queue, sets up mutation callback etc.
