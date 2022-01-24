@@ -178,6 +178,29 @@ const UncomplicatedPlayer = (() => {
             });
         };
 
+        // adjust players array when prefetch size is changed
+        const adjustPlayers = () => {
+            if (_prefetchSize === ucpQueue.seekLength) return;
+
+            let diff: number = 2 * ucpQueue.seekLength + 1 - playersCount;
+
+            if (diff > 0) {
+                // new players added
+                players.push(createPlayer());
+                initPlayers();
+                updatePrefetch();
+            } else {
+                // players removed
+                // TODO: implement selectively splicing the array to prevent
+                //       prefetch updates
+                players.splice(players.length - diff, diff);
+                updatePrefetch();
+            }
+
+            _prefetchSize = ucpQueue.seekLength;
+            playersCount = 2 * _prefetchSize + 1;
+        };
+
         // function called every time queue is mutated, makes sure queue and
         // player are on the same page.
         const queueMutationCallback: QueueMutationCallback = (args: any[]) => {
@@ -227,12 +250,6 @@ const UncomplicatedPlayer = (() => {
         // inits the queue, sets up mutation callback etc.
         const initQueue = () => {
             ucpQueue._mutationCallback = queueMutationCallback;
-        };
-
-        // adjust players array when prefetch size is changed
-        const adjustPlayers = () => {
-            // TODO: implement to adjust players array when
-            // playersCount (= 2 x prefetch_size + 1) is changed
         };
 
         ///////////////////////////////
