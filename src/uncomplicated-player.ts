@@ -204,7 +204,6 @@ const UncomplicatedPlayer = (() => {
         // function called every time queue is mutated, makes sure queue and
         // player are on the same page.
         const queueMutationCallback: QueueMutationCallback = (args: any[]) => {
-            // TODO: complete this implementation
             if (!args) return;
 
             let oldCurrentIndex: number = _currentPlayer;
@@ -291,6 +290,13 @@ const UncomplicatedPlayer = (() => {
         const initQueue = () => {
             ucpQueue._mutationCallback = queueMutationCallback;
         };
+
+        ///////////////////////////////
+        ///////////////////////////////
+        /////////// inits /////////////
+
+        initQueue();
+        initPlayers();
 
         ///////////////////////////////
         ///////////////////////////////
