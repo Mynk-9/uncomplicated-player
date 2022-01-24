@@ -215,31 +215,71 @@ const UncomplicatedPlayer = (() => {
 
             switch (args[0]) {
                 case 'push':
-                case 'pushMany':
-                case 'pop':
-                case 'remove':
+                case 'pushMany': {
+                    // if previously empty, current would have been changed
+                    // update current track if it has updated
+                    if (
+                        ucpQueue.current &&
+                        players[_currentPlayer].sourceNode.mediaElement.src !==
+                            ucpQueue.current.src.toString()
+                    ) {
+                        players[_currentPlayer].sourceNode.mediaElement.src =
+                            ucpQueue.current.src.toString();
+                    }
                     break;
+                }
+                case 'addNext': {
+                    // simply need to update the prefetch
+                    break;
+                }
+                case 'pop':
+                case 'remove': {
+                    // if current is null then it means that queue is
+                    // empty ahead too
+                    if (!ucpQueue.current) playerStop();
+                    // else just update the prefetch and keep intact current
+                    // player index
+                    break;
+                }
                 case 'clear':
+                    // stop the playing and clear the current src
+                    // and clear the prefetch
+                    playerStop();
+                    players[_currentPlayer].sourceNode.mediaElement.src = '';
                     break;
                 case 'next': {
+                    // cycle to next and update prefetch
                     playerCycleNext();
                     newCurrentIndex = _currentPlayer;
                     break;
                 }
                 case 'prev': {
+                    // cycle to next and update prefetch
                     playerCyclePrev();
                     newCurrentIndex = _currentPlayer;
                     break;
                 }
-                case 'reset':
+                case 'reset': {
+                    // update current and update the prefetch
+                    if (ucpQueue.current)
+                        players[_currentPlayer].sourceNode.mediaElement.src =
+                            ucpQueue.current.src.toString();
+                    else
+                        players[_currentPlayer].sourceNode.mediaElement.src =
+                            '';
                     break;
+                }
                 case 'seekLength':
+                case 'setDefaultSeekLength': {
+                    // adjust players array and prefetch
+                    adjustPlayers();
                     break;
-                case 'setDefaultSeekLength':
-                    break;
+                }
                 case 'shuffle':
+                    // simply update the prefetch
                     break;
                 default:
+                    // nothing to do
                     return;
             }
 
