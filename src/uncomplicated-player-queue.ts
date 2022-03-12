@@ -27,6 +27,7 @@ import {
  *  3. current_track = next_seek.front
  *  4. next_seek.pop_front()
  *  5. next.remove_fetched_track()
+ * 
  * prev:
  *  1. next.insert(next_seek.back)
  *  2. next_seek.pop_back()
@@ -408,6 +409,10 @@ class UncomplicatedPlayerQueue {
 
     /**
      * Get the next and previous seeks.
+     * [...............]       [...........]
+     *  0.............n         0.........n
+     *        prev                  next
+     *  oldest...recent         next...last
      */
     public get seek(): { next: Track[]; prev: Track[] } {
         let nextSeek: Track[] = this.queue.nextSeek;

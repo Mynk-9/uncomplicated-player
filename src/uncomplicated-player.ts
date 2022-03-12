@@ -56,10 +56,6 @@ const UncomplicatedPlayer = (() => {
         // setting up queue
         let ucpQueue = new UncomplicatedPlayerQueue();
 
-        // setting up players
-        let playersCount: number = 7; // = 2 x prefetch_size + 1
-        let players: Players[] = Array<Players>(playersCount);
-
         // global players states
         let globalPlay: boolean = false;
         let globalGain: number = 1.0;
@@ -71,6 +67,10 @@ const UncomplicatedPlayer = (() => {
         let _prefetch: boolean = true;
         const _defaultPrefetchSize: number = 3;
         let _prefetchSize: number = _defaultPrefetchSize;
+
+        // setting up players
+        let playersCount: number = 2 * _defaultPrefetchSize + 1;
+        let players: Players[] = Array<Players>(playersCount);
 
         // logging state and method
         let loggingState: boolean = false;
@@ -96,12 +96,15 @@ const UncomplicatedPlayer = (() => {
                 sourceNode: audioContext.createMediaElementSource(new Audio()),
                 gainNode: audioContext.createGain(),
             };
+            // connect source node to gain
             newPlayer.sourceNode.connect(newPlayer.gainNode);
             // allow cors
             newPlayer.sourceNode.mediaElement.crossOrigin = 'anonymous';
             // enable prefetch of track
             newPlayer.sourceNode.mediaElement.preload = 'auto';
+            // connect gain to destination
             newPlayer.gainNode.connect(audioContext.destination);
+            // set gain equal to global gain
             newPlayer.gainNode.gain.value = globalGain;
 
             makeLog('createPlayer');
@@ -170,7 +173,7 @@ const UncomplicatedPlayer = (() => {
                 _currentPlayer < playersCount - 1 ? _currentPlayer + 1 : 0;
             makeLog(`playerCycleNext - current-${_currentPlayer}`);
         };
-        // players cycle back
+        // players cycle backward
         const playerCyclePrev = () => {
             _currentPlayer =
                 _currentPlayer > 0 ? _currentPlayer - 1 : playersCount - 1;
@@ -240,10 +243,10 @@ const UncomplicatedPlayer = (() => {
             if (!args) return;
 
             let oldCurrentIndex: number = _currentPlayer;
-            let oldCurrentSrc: string =
-                players[_currentPlayer].sourceNode.mediaElement.src;
+            // let oldCurrentSrc: string =
+            //     players[_currentPlayer].sourceNode.mediaElement.src;
             let newCurrentIndex: number = oldCurrentIndex;
-            let newCurrentSrc: string = oldCurrentSrc;
+            // let newCurrentSrc: string = oldCurrentSrc;
 
             switch (args[0]) {
                 case 'push':
@@ -279,6 +282,7 @@ const UncomplicatedPlayer = (() => {
                 case 'clear':
                     // stop the playing and clear the current src
                     // and clear the prefetch
+                    // prefetch gets cleared with updatePrefetch function
                     playerStop();
                     players[_currentPlayer].sourceNode.mediaElement.src = '';
                     makeLog('Mutation callback - clear');
@@ -313,7 +317,7 @@ const UncomplicatedPlayer = (() => {
                     // adjust players array and prefetch
                     adjustPlayers();
                     makeLog(
-                        'Mutation callback - seekLength/setDefaultSeekLength'
+                        'Mutation callback - set seekLength - num or default'
                     );
                     break;
                 }
