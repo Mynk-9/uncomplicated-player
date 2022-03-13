@@ -224,11 +224,33 @@ const UncomplicatedPlayer = (() => {
                 initPlayers();
                 updatePrefetch();
             } else {
-                // players removed
-                // TODO: implement selectively splicing the array to prevent
-                //       prefetch updates
-                players.splice(players.length - diff, diff);
-                updatePrefetch();
+                // selectively splice players so that prefetch updates can be prevented
+                // make sure diff is positive
+                diff = Math.abs(diff);
+
+                let leftRange = [0, 0];
+                let rightRange = [0, 0];
+
+                // splice right range first so that _currentPlayer is relevant
+                // while splicing left range
+                rightRange[0] = _currentPlayer + ucpQueue.seekLength + 1;
+                rightRange[1] = rightRange[0] + diff;
+                rightRange = rightRange.map(idx =>
+                    idx >= playersCount ? playersCount : idx
+                );
+                players.splice(rightRange[0], rightRange[1] - rightRange[0]);
+
+                // recalculate diff
+                diff = Math.abs(2 * ucpQueue.seekLength + 1 - players.length);
+
+                // splice left range now
+                leftRange[1] = _currentPlayer - ucpQueue.seekLength - 1;
+                leftRange[0] = leftRange[1] - diff + 1;
+                if (leftRange[0] < 0) {
+                    players.splice(leftRange[0], diff);
+                    leftRange[0] = 0;
+                }
+                players.splice(leftRange[0], leftRange[1] - leftRange[0] + 1);
             }
 
             _prefetchSize = ucpQueue.seekLength;
