@@ -15,7 +15,6 @@ interface UncomplicatedPlayer {
     get logging(): boolean;
     set logging(enableLogging: boolean);
     set logger(func: { (log: string): void });
-    setConfig(conf: Partial<uncomplicatedConfig>): void;
 }
 
 /**
@@ -437,9 +436,6 @@ const UncomplicatedPlayer = (() => {
             },
             set logger(func: { (log: string): void }) {
                 config.logger = func;
-            },
-            setConfig: (conf: Partial<uncomplicatedConfig>): void => {
-                config = { ...config, ...conf };
             },
         };
     };
