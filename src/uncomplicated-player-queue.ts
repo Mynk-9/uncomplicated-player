@@ -36,6 +36,9 @@ import {
  *  5. history.pop_back()
  */
 
+/**
+ * Queue for the uncomplicated player.
+ */
 class UncomplicatedPlayerQueue {
     private queue: Queue;
     private shuffleQueue: boolean;

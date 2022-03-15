@@ -36,6 +36,9 @@ interface UncomplicatedPlayer {
  * In this player, we expand this logic to involve more than 3 nodes.
  */
 
+/**
+ * Uncomplicated player.
+ */
 const UncomplicatedPlayer = (() => {
     /// instance of the player
     let instance: UncomplicatedPlayer;
