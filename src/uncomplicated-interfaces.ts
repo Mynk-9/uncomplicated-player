@@ -35,6 +35,7 @@ interface QueueMutationCallback {
 interface Players {
     sourceNode: MediaElementAudioSourceNode;
     gainNode: GainNode;
+    scheduledEvent?: Function;
 }
 
 /**

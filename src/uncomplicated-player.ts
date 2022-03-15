@@ -382,6 +382,48 @@ const UncomplicatedPlayer = (() => {
             makeLog('initQueue');
         };
 
+        // linear gain transition
+        const linearGainTransition = (
+            player: Players,
+            targetGain: number,
+            duration: number
+        ): void => {
+            const timeConst = duration / 1000 / 5;
+            player.gainNode.gain.cancelAndHoldAtTime(audioContext.currentTime);
+            player.gainNode.gain.setTargetAtTime(
+                targetGain,
+                audioContext.currentTime,
+                timeConst
+            );
+            player.scheduledEvent = () =>
+                (player.gainNode.gain.value = targetGain);
+
+            setTimeout(() => {
+                if (player.scheduledEvent) player.scheduledEvent();
+            }, duration);
+        };
+
+        // adjust gain: if smooth gain transition is enabled then smoothly
+        // transition the gain of current player and instantly change gain
+        // of other players
+        const adjustGain = () => {
+            if (config.smoothGainTransition) {
+                players.forEach((player, i) => {
+                    if (_currentPlayer !== i)
+                        player.gainNode.gain.value = config.globalGain;
+                });
+                linearGainTransition(
+                    players[_currentPlayer],
+                    config.globalGain,
+                    config.smoothGainTransitionDuration
+                );
+            } else {
+                players.forEach(
+                    player => (player.gainNode.gain.value = config.globalGain)
+                );
+            }
+        };
+
         ///////////////////////////////
         ///////////////////////////////
         /////////// inits /////////////
@@ -405,12 +447,19 @@ const UncomplicatedPlayer = (() => {
                 makeLog('pause');
             },
             volIncrease: (): number => {
-                makeLog('volIncrease');
-                return 1.0;
+                makeLog('volIncrease: delta: ', config.gainDelta);
+                config.globalGain += config.gainDelta;
+                if (!config.allowGainBoost && config.globalGain > 1.0)
+                    config.globalGain = 1.0;
+                adjustGain();
+                return config.globalGain;
             },
             volDecrease: (): number => {
-                makeLog('volDecrease');
-                return 1.0;
+                makeLog('volDecrease: delta: ', config.gainDelta);
+                config.globalGain -= config.gainDelta;
+                if (config.globalGain < 0) config.globalGain = 0;
+                adjustGain();
+                return config.globalGain;
             },
             get queue() {
                 return ucpQueue;
