@@ -1,7 +1,12 @@
-import { Players, QueueMutationCallback } from './uncomplicated-interfaces';
+import {
+    Players,
+    QueueMutationCallback,
+    uncomplicatedConfig,
+} from './uncomplicated-interfaces';
 import UncomplicatedPlayerQueue from './uncomplicated-player-queue';
 interface UncomplicatedPlayer {
-    play(): boolean;
+    play(): void;
+    pause(): void;
     volIncrease(): number;
     volDecrease(): number;
     get queue(): UncomplicatedPlayerQueue;
@@ -10,6 +15,7 @@ interface UncomplicatedPlayer {
     get logging(): boolean;
     set logging(enableLogging: boolean);
     set logger(func: { (log: string): void });
+    setConfig(conf: Partial<uncomplicatedConfig>): void;
 }
 
 /**
@@ -59,25 +65,27 @@ const UncomplicatedPlayer = (() => {
         // setting up queue
         let ucpQueue = new UncomplicatedPlayerQueue();
 
-        // global players states
-        let globalPlay: boolean = false;
-        let globalGain: number = 1.0;
-
         // players cycling variables
         let _currentPlayer = 0;
 
-        // player state variables
-        let _prefetch: boolean = true;
+        // config setup
         const _defaultPrefetchSize: number = 3;
-        let _prefetchSize: number = _defaultPrefetchSize;
+        let config: uncomplicatedConfig = {
+            globalPlay: false,
+            globalGain: 1.0,
+            prefetch: true,
+            prefetchSize: _defaultPrefetchSize,
+            crossfade: true,
+            crossfadeQueue: true,
+            crossfadePlaylist: true,
+            crossfadeManualSwitch: true,
+            loggingState: false,
+            logger: () => {},
+        };
 
         // setting up players
         let playersCount: number = 2 * _defaultPrefetchSize + 1;
         let players: Players[] = Array<Players>(playersCount);
-
-        // logging state and method
-        let loggingState: boolean = false;
-        let logger: { (log: string): void } = () => {};
 
         ///////////////////////////////
         ///////////////////////////////
@@ -85,10 +93,10 @@ const UncomplicatedPlayer = (() => {
 
         // logging utility
         const makeLog = (log: string, ...params: any[]) => {
-            if (loggingState) {
-                logger(log);
+            if (config.loggingState) {
+                config.logger(log);
                 params.forEach(param => {
-                    logger('' + param);
+                    config.logger('' + param);
                 });
             }
         };
@@ -108,7 +116,7 @@ const UncomplicatedPlayer = (() => {
             // connect gain to destination
             newPlayer.gainNode.connect(audioContext.destination);
             // set gain equal to global gain
-            newPlayer.gainNode.gain.value = globalGain;
+            newPlayer.gainNode.gain.value = config.globalGain;
 
             makeLog('createPlayer');
 
@@ -147,7 +155,7 @@ const UncomplicatedPlayer = (() => {
         // return array of next players
         const getNextPlayers = (): number[] => {
             let indexes: number[] = [];
-            for (let i = 1; i <= _prefetchSize; ++i) {
+            for (let i = 1; i <= config.prefetchSize; ++i) {
                 indexes.push(
                     _currentPlayer + i < playersCount
                         ? _currentPlayer + i
@@ -160,7 +168,7 @@ const UncomplicatedPlayer = (() => {
         // get array of prev players
         const getPrevPlayers = (): number[] => {
             let indexes: number[] = [];
-            for (let i = 1; i <= _prefetchSize; ++i) {
+            for (let i = 1; i <= config.prefetchSize; ++i) {
                 indexes.push(
                     _currentPlayer - i >= 0
                         ? _currentPlayer - i
@@ -217,7 +225,7 @@ const UncomplicatedPlayer = (() => {
 
         // adjust players array when prefetch size is changed
         const adjustPlayers = () => {
-            if (_prefetchSize === ucpQueue.seekLength) return;
+            if (config.prefetchSize === ucpQueue.seekLength) return;
 
             let diff: number = 2 * ucpQueue.seekLength + 1 - playersCount;
 
@@ -256,8 +264,8 @@ const UncomplicatedPlayer = (() => {
                 players.splice(leftRange[0], leftRange[1] - leftRange[0] + 1);
             }
 
-            _prefetchSize = ucpQueue.seekLength;
-            playersCount = 2 * _prefetchSize + 1;
+            config.prefetchSize = ucpQueue.seekLength;
+            playersCount = 2 * config.prefetchSize + 1;
 
             makeLog(`adjustPlayers - ${players.length}`);
         };
@@ -378,9 +386,15 @@ const UncomplicatedPlayer = (() => {
         ////// public functions ///////
 
         return {
-            play: (): boolean => {
+            play: (): void => {
+                players[_currentPlayer].sourceNode.mediaElement.play();
+                config.globalPlay = true;
                 makeLog('play');
-                return true;
+            },
+            pause: (): void => {
+                players[_currentPlayer].sourceNode.mediaElement.pause();
+                config.globalPlay = false;
+                makeLog('pause');
             },
             volIncrease: (): number => {
                 makeLog('volIncrease');
@@ -394,17 +408,20 @@ const UncomplicatedPlayer = (() => {
                 return ucpQueue;
             },
             get prefetch(): { enabled: boolean; size?: number } {
-                if (_prefetch)
-                    return { enabled: _prefetch, size: _prefetchSize };
+                if (config.prefetch)
+                    return {
+                        enabled: config.prefetch,
+                        size: config.prefetchSize,
+                    };
                 return { enabled: false };
             },
             set prefetch(params: { enabled: boolean; size?: number }) {
-                _prefetch = params.enabled;
+                config.prefetch = params.enabled;
                 if (params.enabled && params.size) {
-                    _prefetchSize = params.size;
+                    config.prefetchSize = params.size;
                     ucpQueue.seekLength = params.size;
                 } else if (params.enabled) {
-                    _prefetchSize = _defaultPrefetchSize;
+                    config.prefetchSize = _defaultPrefetchSize;
                     ucpQueue.seekLength = _defaultPrefetchSize;
                 }
 
@@ -413,13 +430,16 @@ const UncomplicatedPlayer = (() => {
                 adjustPlayers();
             },
             get logging(): boolean {
-                return loggingState;
+                return config.loggingState;
             },
             set logging(loggingEnabled: boolean) {
-                loggingState = loggingEnabled;
+                config.loggingState = loggingEnabled;
             },
             set logger(func: { (log: string): void }) {
-                logger = func;
+                config.logger = func;
+            },
+            setConfig: (conf: Partial<uncomplicatedConfig>): void => {
+                config = { ...config, ...conf };
             },
         };
     };

@@ -37,4 +37,31 @@ interface Players {
     gainNode: GainNode;
 }
 
-export { Queue, Track, PrimitiveTrack, Players, QueueMutationCallback };
+/**
+ * Interface for config object
+ */
+interface uncomplicatedConfig {
+    // global player states
+    globalPlay: boolean;
+    globalGain: number;
+    // prefetch configs
+    prefetch: boolean;
+    prefetchSize: number;
+    // crossfade configs
+    crossfade: boolean;
+    crossfadePlaylist: boolean;
+    crossfadeQueue: boolean;
+    crossfadeManualSwitch: boolean;
+    // logging configs
+    loggingState: boolean;
+    logger: { (log: string): void };
+}
+
+export {
+    Queue,
+    Track,
+    PrimitiveTrack,
+    Players,
+    QueueMutationCallback,
+    uncomplicatedConfig,
+};
