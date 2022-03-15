@@ -72,12 +72,21 @@ const UncomplicatedPlayer = (() => {
         let config: uncomplicatedConfig = {
             globalPlay: false,
             globalGain: 1.0,
+
+            gainDelta: 0.1,
+            allowGainBoost: false,
+            smoothGainTransition: false,
+            smoothGainTransitionDuration: 100,
+
             prefetch: true,
             prefetchSize: _defaultPrefetchSize,
+
             crossfade: true,
             crossfadeQueue: true,
             crossfadePlaylist: true,
             crossfadeManualSwitch: true,
+            crossfadeDuration: 1000,
+
             loggingState: false,
             logger: () => {},
         };

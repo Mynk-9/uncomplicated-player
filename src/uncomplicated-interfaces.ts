@@ -44,14 +44,24 @@ interface uncomplicatedConfig {
     // global player states
     globalPlay: boolean;
     globalGain: number;
+
+    // gain configs
+    gainDelta: number;
+    allowGainBoost: boolean;
+    smoothGainTransition: boolean;
+    smoothGainTransitionDuration: number;
+
     // prefetch configs
     prefetch: boolean;
     prefetchSize: number;
+
     // crossfade configs
     crossfade: boolean;
     crossfadePlaylist: boolean;
     crossfadeQueue: boolean;
     crossfadeManualSwitch: boolean;
+    crossfadeDuration: number;
+
     // logging configs
     loggingState: boolean;
     logger: { (log: string): void };
