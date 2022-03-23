@@ -382,12 +382,18 @@ const UncomplicatedPlayer = (() => {
             makeLog('initQueue');
         };
 
-        // linear gain transition
-        const linearGainTransition = (
+        /**
+         * Exponentially transition gain to the given value.
+         * @param {Players} player player
+         * @param {Number} targetGain target gain value
+         * @param {Number} duration milliseconds
+         * @returns Promise which resolves after the operation is done
+         */
+        const exponentialGainTransition = (
             player: Players,
             targetGain: number,
             duration: number
-        ): void => {
+        ): Promise<void> => {
             const timeConst = duration / 1000 / 5;
             player.gainNode.gain.cancelAndHoldAtTime(audioContext.currentTime);
             player.gainNode.gain.setTargetAtTime(
@@ -398,9 +404,12 @@ const UncomplicatedPlayer = (() => {
             player.scheduledEvent = () =>
                 (player.gainNode.gain.value = targetGain);
 
-            setTimeout(() => {
-                if (player.scheduledEvent) player.scheduledEvent();
-            }, duration);
+            return new Promise(resolvePromise => {
+                setTimeout(() => {
+                    if (player.scheduledEvent) player.scheduledEvent();
+                    resolvePromise();
+                }, duration);
+            });
         };
 
         // adjust gain: if smooth gain transition is enabled then smoothly
@@ -412,7 +421,7 @@ const UncomplicatedPlayer = (() => {
                     if (_currentPlayer !== i)
                         player.gainNode.gain.value = config.globalGain;
                 });
-                linearGainTransition(
+                exponentialGainTransition(
                     players[_currentPlayer],
                     config.globalGain,
                     config.smoothGainTransitionDuration
