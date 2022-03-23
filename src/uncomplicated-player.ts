@@ -433,6 +433,19 @@ const UncomplicatedPlayer = (() => {
             }
         };
 
+        // pauses the player according to the configs
+        const playerPause = (player: Players, fade: boolean) => {
+            exponentialGainTransition(
+                player,
+                0,
+                fade ? 0 : config.crossfadeDuration
+            )
+                .then(() => player.sourceNode.mediaElement.pause())
+                .catch(() =>
+                    makeLog(`Error at pausing player ${_currentPlayer}`)
+                );
+        };
+
         ///////////////////////////////
         ///////////////////////////////
         /////////// inits /////////////
@@ -451,7 +464,7 @@ const UncomplicatedPlayer = (() => {
                 makeLog('play');
             },
             pause: (): void => {
-                players[_currentPlayer].sourceNode.mediaElement.pause();
+                playerPause(players[_currentPlayer], config.crossfade);
                 config.globalPlay = false;
                 makeLog('pause');
             },
