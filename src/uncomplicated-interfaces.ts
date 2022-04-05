@@ -34,6 +34,7 @@ interface QueueMutationCallback {
  */
 interface Players {
     sourceNode: MediaElementAudioSourceNode;
+    crossfadeNode: GainNode;
     gainNode: GainNode;
     scheduledEvent?: Function;
     play: Boolean;

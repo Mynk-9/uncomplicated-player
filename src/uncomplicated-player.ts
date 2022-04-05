@@ -41,6 +41,12 @@ interface UncomplicatedPlayer {
  * Here we essentially changed the source of node_1 from track1 to track4 and
  * change our curr/next/prev indexes.
  * In this player, we expand this logic to involve more than 3 nodes.
+ * 
+ * Audio Nodes connection:
+ * MediaElementAudioSourceNode --> crossfade node (GainNode) 
+ *                                           |
+ *                                           V
+ *       Audio Destination     <--    volume node (GainNode)
  */
 
 /**
@@ -113,21 +119,26 @@ const UncomplicatedPlayer = (() => {
 
         // create new player
         const createPlayer = (): Players => {
-            let newPlayer = {
+            let newPlayer: Players = {
                 sourceNode: audioContext.createMediaElementSource(new Audio()),
+                crossfadeNode: audioContext.createGain(),
                 gainNode: audioContext.createGain(),
                 play: false,
             };
-            // connect source node to gain
-            newPlayer.sourceNode.connect(newPlayer.gainNode);
-            // allow cors
-            newPlayer.sourceNode.mediaElement.crossOrigin = 'anonymous';
-            // enable prefetch of track
-            newPlayer.sourceNode.mediaElement.preload = 'auto';
+
+            // connect source node to crossfade gain node
+            newPlayer.sourceNode.connect(newPlayer.crossfadeNode);
+            // connect crossfade gain node to main gain node
+            newPlayer.crossfadeNode.connect(newPlayer.gainNode);
             // connect gain to destination
             newPlayer.gainNode.connect(audioContext.destination);
             // set gain equal to global gain
             newPlayer.gainNode.gain.value = config.globalGain;
+
+            // allow cors in media element
+            newPlayer.sourceNode.mediaElement.crossOrigin = 'anonymous';
+            // enable prefetch of track
+            newPlayer.sourceNode.mediaElement.preload = 'auto';
 
             makeLog('createPlayer');
 
@@ -393,13 +404,13 @@ const UncomplicatedPlayer = (() => {
          * @returns Promise which resolves after the operation is done
          */
         const exponentialGainTransition = (
-            player: Players,
+            gainNode: GainNode,
             targetGain: number,
             duration: number
         ): Promise<void> => {
             const timeConst = duration / 1000 / 5;
-            player.gainNode.gain.cancelAndHoldAtTime(audioContext.currentTime);
-            player.gainNode.gain.setTargetAtTime(
+            gainNode.gain.cancelAndHoldAtTime(audioContext.currentTime);
+            gainNode.gain.setTargetAtTime(
                 targetGain,
                 audioContext.currentTime,
                 timeConst
@@ -420,7 +431,7 @@ const UncomplicatedPlayer = (() => {
                         player.gainNode.gain.value = config.globalGain;
                 });
                 exponentialGainTransition(
-                    players[_currentPlayer],
+                    players[_currentPlayer].gainNode,
                     config.globalGain,
                     config.smoothGainTransitionDuration
                 );
@@ -435,7 +446,7 @@ const UncomplicatedPlayer = (() => {
         const playerPause = (player: Players, fade: boolean) => {
             player.play = false;
             exponentialGainTransition(
-                player,
+                player.crossfadeNode,
                 0,
                 fade ? 0 : config.crossfadeDuration
             )
@@ -453,8 +464,8 @@ const UncomplicatedPlayer = (() => {
         const playerPlay = (player: Players, fade: boolean) => {
             player.play = true;
             exponentialGainTransition(
-                player,
-                config.globalGain,
+                player.crossfadeNode,
+                1,
                 fade ? 0 : config.crossfadeDuration
             )
                 .then(() => {
