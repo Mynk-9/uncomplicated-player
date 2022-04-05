@@ -114,6 +114,7 @@ const UncomplicatedPlayer = (() => {
             let newPlayer = {
                 sourceNode: audioContext.createMediaElementSource(new Audio()),
                 gainNode: audioContext.createGain(),
+                play: false,
             };
             // connect source node to gain
             newPlayer.sourceNode.connect(newPlayer.gainNode);
