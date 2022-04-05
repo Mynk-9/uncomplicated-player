@@ -431,12 +431,17 @@ const UncomplicatedPlayer = (() => {
 
         // pauses the player according to the configs
         const playerPause = (player: Players, fade: boolean) => {
+            player.play = false;
             exponentialGainTransition(
                 player,
                 0,
                 fade ? 0 : config.crossfadeDuration
             )
-                .then(() => player.sourceNode.mediaElement.pause())
+                .then(() => {
+                    // confirm if player state is not changed meanwhile
+                    if (player.play === false)
+                        player.sourceNode.mediaElement.pause();
+                })
                 .catch(() =>
                     makeLog(`Error at pausing player ${_currentPlayer}`)
                 );
