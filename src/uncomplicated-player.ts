@@ -402,14 +402,9 @@ const UncomplicatedPlayer = (() => {
                 audioContext.currentTime,
                 timeConst
             );
-            player.scheduledEvent = () =>
-                (player.gainNode.gain.value = targetGain);
 
             return new Promise(resolvePromise => {
-                setTimeout(() => {
-                    if (player.scheduledEvent) player.scheduledEvent();
-                    resolvePromise();
-                }, duration);
+                setTimeout(() => resolvePromise(), duration);
             });
         };
 
