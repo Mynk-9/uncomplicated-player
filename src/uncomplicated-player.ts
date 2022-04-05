@@ -447,6 +447,24 @@ const UncomplicatedPlayer = (() => {
                 );
         };
 
+        // plays the player according to the configs
+        const playerPlay = (player: Players, fade: boolean) => {
+            player.play = true;
+            exponentialGainTransition(
+                player,
+                config.globalGain,
+                fade ? 0 : config.crossfadeDuration
+            )
+                .then(() => {
+                    // confirm if player state is not changed meanwhile
+                    if (player.play === true)
+                        player.gainNode.gain.value = config.globalGain;
+                })
+                .catch(() =>
+                    makeLog(`Error at playing player ${_currentPlayer}`)
+                );
+        };
+
         ///////////////////////////////
         ///////////////////////////////
         /////////// inits /////////////
