@@ -8,6 +8,7 @@ interface UncomplicatedPlayer {
     play(): void;
     pause(): void;
     next(): void;
+    prev(): void;
     volIncrease(): number;
     volDecrease(): number;
     get queue(): UncomplicatedPlayerQueue;
@@ -513,6 +514,15 @@ const UncomplicatedPlayer = (() => {
 
                 updatePrefetch();
             },
+            prev: (): void => {
+                let _oldPlayer = _currentPlayer;
+                let fade = config.crossfade && config.crossfadeManualSwitch;
+
+                playerCyclePrev();
+                playerPause(players[_oldPlayer], fade);
+                playerPlay(players[_currentPlayer], fade);
+
+                updatePrefetch();
             },
             get queue() {
                 return ucpQueue;
