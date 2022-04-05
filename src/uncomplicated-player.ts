@@ -7,8 +7,6 @@ import UncomplicatedPlayerQueue from './uncomplicated-player-queue';
 interface UncomplicatedPlayer {
     play(): void;
     pause(): void;
-    next(): void;
-    prev(): void;
     volIncrease(): number;
     volDecrease(): number;
     get queue(): UncomplicatedPlayerQueue;
@@ -41,9 +39,9 @@ interface UncomplicatedPlayer {
  * Here we essentially changed the source of node_1 from track1 to track4 and
  * change our curr/next/prev indexes.
  * In this player, we expand this logic to involve more than 3 nodes.
- * 
+ *
  * Audio Nodes connection:
- * MediaElementAudioSourceNode --> crossfade node (GainNode) 
+ * MediaElementAudioSourceNode --> crossfade node (GainNode)
  *                                           |
  *                                           V
  *       Audio Destination     <--    volume node (GainNode)
@@ -165,12 +163,15 @@ const UncomplicatedPlayer = (() => {
             }
         };
 
-        // switch from player1 to player2 according to various configs
-        const switchPlayers = (oldIndex: number, newIndex: number) => {
-            // TODO: implement crossfading
+        // switch from player1 to player2
+        const switchPlayers = (
+            oldIndex: number,
+            newIndex: number,
+            fade: boolean
+        ) => {
             if (oldIndex === newIndex) return;
-            players[oldIndex].sourceNode.mediaElement.pause();
-            players[newIndex].sourceNode.mediaElement.play();
+            playerPause(players[oldIndex], fade);
+            playerPlay(players[newIndex], fade);
             makeLog(`switchPlayers - ${oldIndex}<>${newIndex}`);
         };
 
@@ -298,10 +299,8 @@ const UncomplicatedPlayer = (() => {
             if (!args) return;
 
             let oldCurrentIndex: number = _currentPlayer;
-            // let oldCurrentSrc: string =
-            //     players[_currentPlayer].sourceNode.mediaElement.src;
             let newCurrentIndex: number = oldCurrentIndex;
-            // let newCurrentSrc: string = oldCurrentSrc;
+            let fade: boolean = false;
 
             switch (args[0]) {
                 case 'push':
@@ -346,6 +345,7 @@ const UncomplicatedPlayer = (() => {
                     // cycle to next and update prefetch
                     playerCycleNext();
                     newCurrentIndex = _currentPlayer;
+                    fade = config.crossfade && config.crossfadeManualSwitch;
                     makeLog('Mutation callback - next');
                     break;
                 }
@@ -353,6 +353,7 @@ const UncomplicatedPlayer = (() => {
                     // cycle to next and update prefetch
                     playerCyclePrev();
                     newCurrentIndex = _currentPlayer;
+                    fade = config.crossfade && config.crossfadeManualSwitch;
                     makeLog('Mutation callback - prev');
                     break;
                 }
@@ -386,7 +387,8 @@ const UncomplicatedPlayer = (() => {
                     return;
             }
 
-            switchPlayers(oldCurrentIndex, newCurrentIndex);
+            // player switch and prefetch update
+            switchPlayers(oldCurrentIndex, newCurrentIndex, fade);
             updatePrefetch();
         };
 
@@ -514,26 +516,6 @@ const UncomplicatedPlayer = (() => {
                 if (config.globalGain < 0) config.globalGain = 0;
                 adjustGain();
                 return config.globalGain;
-            },
-            next: (): void => {
-                let _oldPlayer = _currentPlayer;
-                let fade = config.crossfade && config.crossfadeManualSwitch;
-
-                playerCycleNext();
-                playerPause(players[_oldPlayer], fade);
-                playerPlay(players[_currentPlayer], fade);
-
-                updatePrefetch();
-            },
-            prev: (): void => {
-                let _oldPlayer = _currentPlayer;
-                let fade = config.crossfade && config.crossfadeManualSwitch;
-
-                playerCyclePrev();
-                playerPause(players[_oldPlayer], fade);
-                playerPlay(players[_currentPlayer], fade);
-
-                updatePrefetch();
             },
             get queue() {
                 return ucpQueue;
