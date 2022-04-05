@@ -163,6 +163,88 @@ const UncomplicatedPlayer = (() => {
             }
         };
 
+        /**
+         * Exponentially transition gain to the given value.
+         * @param {Players} player player
+         * @param {Number} targetGain target gain value
+         * @param {Number} duration milliseconds
+         * @returns Promise which resolves after the operation is done
+         */
+        const exponentialGainTransition = (
+            gainNode: GainNode,
+            targetGain: number,
+            duration: number
+        ): Promise<void> => {
+            const timeConst = duration / 1000 / 5;
+            gainNode.gain.cancelAndHoldAtTime(audioContext.currentTime);
+            gainNode.gain.setTargetAtTime(
+                targetGain,
+                audioContext.currentTime,
+                timeConst
+            );
+
+            return new Promise(resolvePromise => {
+                setTimeout(() => resolvePromise(), duration);
+            });
+        };
+
+        // adjust gain: if smooth gain transition is enabled then smoothly
+        // transition the gain of current player and instantly change gain
+        // of other players
+        const adjustGain = () => {
+            if (config.smoothGainTransition) {
+                players.forEach((player, i) => {
+                    if (_currentPlayer !== i)
+                        player.gainNode.gain.value = config.globalGain;
+                });
+                exponentialGainTransition(
+                    players[_currentPlayer].gainNode,
+                    config.globalGain,
+                    config.smoothGainTransitionDuration
+                );
+            } else {
+                players.forEach(
+                    player => (player.gainNode.gain.value = config.globalGain)
+                );
+            }
+        };
+
+        // pauses the player according to the configs
+        const playerPause = (player: Players, fade: boolean) => {
+            player.play = false;
+            exponentialGainTransition(
+                player.crossfadeNode,
+                0,
+                fade ? 0 : config.crossfadeDuration
+            )
+                .then(() => {
+                    // confirm if player state is not changed meanwhile
+                    if (player.play === false)
+                        player.sourceNode.mediaElement.pause();
+                })
+                .catch(() =>
+                    makeLog(`Error at pausing player ${_currentPlayer}`)
+                );
+        };
+
+        // plays the player according to the configs
+        const playerPlay = (player: Players, fade: boolean) => {
+            player.play = true;
+            exponentialGainTransition(
+                player.crossfadeNode,
+                1,
+                fade ? 0 : config.crossfadeDuration
+            )
+                .then(() => {
+                    // confirm if player state is not changed meanwhile
+                    if (player.play === true)
+                        player.gainNode.gain.value = config.globalGain;
+                })
+                .catch(() =>
+                    makeLog(`Error at playing player ${_currentPlayer}`)
+                );
+        };
+
         // switch from player1 to player2
         const switchPlayers = (
             oldIndex: number,
@@ -188,6 +270,7 @@ const UncomplicatedPlayer = (() => {
             makeLog(`getNextPlayers`);
             return indexes;
         };
+
         // get array of prev players
         const getPrevPlayers = (): number[] => {
             let indexes: number[] = [];
@@ -201,12 +284,14 @@ const UncomplicatedPlayer = (() => {
             makeLog('getPrevPlayers - ', indexes);
             return indexes;
         };
+
         // players cycle forward
         const playerCycleNext = () => {
             _currentPlayer =
                 _currentPlayer < playersCount - 1 ? _currentPlayer + 1 : 0;
             makeLog(`playerCycleNext - current-${_currentPlayer}`);
         };
+
         // players cycle backward
         const playerCyclePrev = () => {
             _currentPlayer =
@@ -398,88 +483,6 @@ const UncomplicatedPlayer = (() => {
             makeLog('initQueue');
         };
 
-        /**
-         * Exponentially transition gain to the given value.
-         * @param {Players} player player
-         * @param {Number} targetGain target gain value
-         * @param {Number} duration milliseconds
-         * @returns Promise which resolves after the operation is done
-         */
-        const exponentialGainTransition = (
-            gainNode: GainNode,
-            targetGain: number,
-            duration: number
-        ): Promise<void> => {
-            const timeConst = duration / 1000 / 5;
-            gainNode.gain.cancelAndHoldAtTime(audioContext.currentTime);
-            gainNode.gain.setTargetAtTime(
-                targetGain,
-                audioContext.currentTime,
-                timeConst
-            );
-
-            return new Promise(resolvePromise => {
-                setTimeout(() => resolvePromise(), duration);
-            });
-        };
-
-        // adjust gain: if smooth gain transition is enabled then smoothly
-        // transition the gain of current player and instantly change gain
-        // of other players
-        const adjustGain = () => {
-            if (config.smoothGainTransition) {
-                players.forEach((player, i) => {
-                    if (_currentPlayer !== i)
-                        player.gainNode.gain.value = config.globalGain;
-                });
-                exponentialGainTransition(
-                    players[_currentPlayer].gainNode,
-                    config.globalGain,
-                    config.smoothGainTransitionDuration
-                );
-            } else {
-                players.forEach(
-                    player => (player.gainNode.gain.value = config.globalGain)
-                );
-            }
-        };
-
-        // pauses the player according to the configs
-        const playerPause = (player: Players, fade: boolean) => {
-            player.play = false;
-            exponentialGainTransition(
-                player.crossfadeNode,
-                0,
-                fade ? 0 : config.crossfadeDuration
-            )
-                .then(() => {
-                    // confirm if player state is not changed meanwhile
-                    if (player.play === false)
-                        player.sourceNode.mediaElement.pause();
-                })
-                .catch(() =>
-                    makeLog(`Error at pausing player ${_currentPlayer}`)
-                );
-        };
-
-        // plays the player according to the configs
-        const playerPlay = (player: Players, fade: boolean) => {
-            player.play = true;
-            exponentialGainTransition(
-                player.crossfadeNode,
-                1,
-                fade ? 0 : config.crossfadeDuration
-            )
-                .then(() => {
-                    // confirm if player state is not changed meanwhile
-                    if (player.play === true)
-                        player.gainNode.gain.value = config.globalGain;
-                })
-                .catch(() =>
-                    makeLog(`Error at playing player ${_currentPlayer}`)
-                );
-        };
-
         ///////////////////////////////
         ///////////////////////////////
         /////////// inits /////////////
@@ -492,16 +495,22 @@ const UncomplicatedPlayer = (() => {
         ////// public functions ///////
 
         return {
+            /// Play the current track
             play: (): void => {
                 players[_currentPlayer].sourceNode.mediaElement.play();
                 config.globalPlay = true;
                 makeLog('play');
             },
+
+            /// Pause the current track
             pause: (): void => {
                 playerPause(players[_currentPlayer], config.crossfade);
                 config.globalPlay = false;
                 makeLog('pause');
             },
+
+            /// Increase the volume with the provided delta.
+            /// Initial value of delta is 0.1
             volIncrease: (): number => {
                 makeLog('volIncrease: delta: ', config.gainDelta);
                 config.globalGain += config.gainDelta;
@@ -510,6 +519,9 @@ const UncomplicatedPlayer = (() => {
                 adjustGain();
                 return config.globalGain;
             },
+
+            /// Decrease the volume with the provided delta.
+            /// Initial value of delta is 0.1
             volDecrease: (): number => {
                 makeLog('volDecrease: delta: ', config.gainDelta);
                 config.globalGain -= config.gainDelta;
@@ -517,9 +529,14 @@ const UncomplicatedPlayer = (() => {
                 adjustGain();
                 return config.globalGain;
             },
+
+            /// Gets the queue object being used by the player to be used
+            /// for the various operations available on the queue.
             get queue() {
                 return ucpQueue;
             },
+
+            /// Get current prefetch config
             get prefetch(): { enabled: boolean; size?: number } {
                 if (config.prefetch)
                     return {
@@ -528,6 +545,10 @@ const UncomplicatedPlayer = (() => {
                     };
                 return { enabled: false };
             },
+
+            /// Set prefetch config. Prefetch size is the number of tracks
+            /// before and after the current track that the player will fetch
+            /// from the source url.
             set prefetch(params: { enabled: boolean; size?: number }) {
                 config.prefetch = params.enabled;
                 if (params.enabled && params.size) {
@@ -542,12 +563,19 @@ const UncomplicatedPlayer = (() => {
 
                 adjustPlayers();
             },
+
+            /// Get logging enabled/disabled state.
             get logging(): boolean {
                 return config.loggingState;
             },
+
+            /// Set logging enabled/disabled state.
             set logging(loggingEnabled: boolean) {
                 config.loggingState = loggingEnabled;
             },
+
+            /// Provide a different logging function than the stock one.
+            /// Function should take a string as parameter.
             set logger(func: { (log: string): void }) {
                 config.logger = func;
             },
