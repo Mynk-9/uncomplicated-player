@@ -7,6 +7,7 @@ import UncomplicatedPlayerQueue from './uncomplicated-player-queue';
 interface UncomplicatedPlayer {
     play(): void;
     pause(): void;
+    next(): void;
     volIncrease(): number;
     volDecrease(): number;
     get queue(): UncomplicatedPlayerQueue;
@@ -501,6 +502,17 @@ const UncomplicatedPlayer = (() => {
                 if (config.globalGain < 0) config.globalGain = 0;
                 adjustGain();
                 return config.globalGain;
+            },
+            next: (): void => {
+                let _oldPlayer = _currentPlayer;
+                let fade = config.crossfade && config.crossfadeManualSwitch;
+
+                playerCycleNext();
+                playerPause(players[_oldPlayer], fade);
+                playerPlay(players[_currentPlayer], fade);
+
+                updatePrefetch();
+            },
             },
             get queue() {
                 return ucpQueue;
