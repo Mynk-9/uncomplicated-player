@@ -41,9 +41,20 @@ interface Players {
 }
 
 /**
+ * Params for crossfade
+ */
+interface CrossfadeParams {
+    crossfade: boolean;
+    crossfadePlaylist: boolean;
+    crossfadeQueue: boolean;
+    crossfadeManualSwitch: boolean;
+    crossfadeDuration: number;
+}
+
+/**
  * Interface for config object
  */
-interface uncomplicatedConfig {
+interface UncomplicatedConfig extends CrossfadeParams {
     // global player states
     globalPlay: boolean;
     globalGain: number;
@@ -59,11 +70,7 @@ interface uncomplicatedConfig {
     prefetchSize: number;
 
     // crossfade configs
-    crossfade: boolean;
-    crossfadePlaylist: boolean;
-    crossfadeQueue: boolean;
-    crossfadeManualSwitch: boolean;
-    crossfadeDuration: number;
+    // imported from CrossfadeParams
 
     // logging configs
     loggingState: boolean;
@@ -76,5 +83,6 @@ export {
     PrimitiveTrack,
     Players,
     QueueMutationCallback,
-    uncomplicatedConfig,
+    CrossfadeParams,
+    UncomplicatedConfig,
 };
