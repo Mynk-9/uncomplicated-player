@@ -5,14 +5,25 @@ import {
     UncomplicatedConfig,
 } from './uncomplicated-interfaces';
 import UncomplicatedPlayerQueue from './uncomplicated-player-queue';
+
 interface UncomplicatedPlayer {
     play(): void;
     pause(): void;
+
     volIncrease(): number;
     volDecrease(): number;
-    get queue(): UncomplicatedPlayerQueue;
+    get volume(): number;
+    set volume(volume: number);
+    get gainDelta(): number;
+    set gainDelta(delta: number);
+    get enableGainBoost(): boolean;
+    set enableGainBoost(enable: boolean);
+    get smoothGainTransition(): { enabled: boolean; duration: number };
+    set smoothGainTransition(params: { enabled?: boolean; duration?: number });
+
     get prefetch(): { enabled: boolean; size?: number };
     set prefetch(params: { enabled: boolean; size?: number });
+    get queue(): UncomplicatedPlayerQueue;
     get logging(): boolean;
     set logging(enableLogging: boolean);
     set logger(func: { (log: string): void });
@@ -529,6 +540,91 @@ const UncomplicatedPlayer = (() => {
                 if (config.globalGain < 0) config.globalGain = 0;
                 adjustGain();
                 return config.globalGain;
+            },
+
+            /// Get the audio volume
+            get volume() {
+                return config.globalGain;
+            },
+
+            /// Set the audio volume
+            /// Allowed values: 0.0-1.0 when gain boost disabled
+            ///                 0.0-inf when gain boost enabled
+            set volume(volume: number) {
+                if (volume < 0.0) config.globalGain = 0.0;
+                else if (volume > 1.0 && !config.allowGainBoost)
+                    config.globalGain = 1.0;
+                else config.globalGain = volume;
+                adjustGain();
+                makeLog(
+                    'set volume:',
+                    'input:',
+                    volume,
+                    'set:',
+                    config.globalGain
+                );
+            },
+
+            /// Get gain delta
+            get gainDelta(): number {
+                return config.gainDelta;
+            },
+
+            /// Set gain delta. Reverts to default value 0.1 if provided value
+            /// not in range (0, 1)
+            set gainDelta(delta: number) {
+                if (0.0 < delta && delta < 1.0) config.gainDelta = delta;
+                else config.gainDelta = defaultConfig.gainDelta;
+                makeLog('set gain delta:', config.gainDelta);
+            },
+
+            /// Get gain boost enabled state
+            get enableGainBoost(): boolean {
+                return config.allowGainBoost;
+            },
+
+            /// Set gain boost enabled state
+            set enableGainBoost(enable: boolean) {
+                config.allowGainBoost = enable;
+                makeLog('set gain boost:', enable ? 'enable' : 'disable');
+            },
+
+            /// Get smooth gain transition enabled state and duration
+            get smoothGainTransition(): { enabled: boolean; duration: number } {
+                return {
+                    enabled: config.smoothGainTransition,
+                    duration: config.smoothGainTransitionDuration,
+                };
+            },
+
+            /// Set smooth gain transition enabled state and duration.
+            /// smooth gain transition is disabled if provided value is 0
+            /// smooth gain transition is reset to default 100ms if value < 0
+            set smoothGainTransition(params: {
+                enabled?: boolean;
+                duration?: number;
+            }) {
+                if (params.enabled == null)
+                    params.enabled = config.smoothGainTransition;
+                if (params.duration == null)
+                    params.duration =
+                        config.smoothGainTransitionDuration ||
+                        defaultConfig.smoothGainTransitionDuration;
+
+                if (params.duration === 0) params.enabled = false;
+                if (params.duration < 0)
+                    params.duration =
+                        defaultConfig.smoothGainTransitionDuration;
+
+                config.smoothGainTransition = params.enabled;
+                config.smoothGainTransitionDuration = params.duration;
+
+                makeLog(
+                    'set smooth gain transition:',
+                    config.smoothGainTransition ? 'enabled' : 'disabled',
+                    'duration:',
+                    config.smoothGainTransitionDuration
+                );
             },
 
             /// Gets the queue object being used by the player to be used
