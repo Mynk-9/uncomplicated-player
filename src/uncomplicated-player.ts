@@ -75,8 +75,7 @@ const UncomplicatedPlayer = (() => {
         let _currentPlayer = 0;
 
         // config setup
-        const _defaultPrefetchSize: number = 3;
-        let config: uncomplicatedConfig = {
+        const defaultConfig: UncomplicatedConfig = {
             globalPlay: false,
             globalGain: 1.0,
 
@@ -86,7 +85,7 @@ const UncomplicatedPlayer = (() => {
             smoothGainTransitionDuration: 100,
 
             prefetch: true,
-            prefetchSize: _defaultPrefetchSize,
+            prefetchSize: 3,
 
             crossfade: true,
             crossfadeQueue: true,
@@ -97,9 +96,10 @@ const UncomplicatedPlayer = (() => {
             loggingState: false,
             logger: () => {},
         };
+        let config: UncomplicatedConfig = { ...defaultConfig };
 
         // setting up players
-        let playersCount: number = 2 * _defaultPrefetchSize + 1;
+        let playersCount: number = 2 * defaultConfig.prefetchSize + 1;
         let players: Players[] = Array<Players>(playersCount);
 
         ///////////////////////////////
@@ -556,8 +556,8 @@ const UncomplicatedPlayer = (() => {
                     config.prefetchSize = params.size;
                     ucpQueue.seekLength = params.size;
                 } else if (params.enabled) {
-                    config.prefetchSize = _defaultPrefetchSize;
-                    ucpQueue.seekLength = _defaultPrefetchSize;
+                    config.prefetchSize = defaultConfig.prefetchSize;
+                    ucpQueue.seekLength = defaultConfig.prefetchSize;
                 }
 
                 makeLog('set prefetch');
