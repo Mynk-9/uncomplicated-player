@@ -23,6 +23,10 @@ interface UncomplicatedPlayer {
 
     get prefetch(): { enabled: boolean; size?: number };
     set prefetch(params: { enabled: boolean; size?: number });
+
+    get crossfade(): CrossfadeParams;
+    set crossfade(params: Partial<CrossfadeParams>);
+
     get queue(): UncomplicatedPlayerQueue;
     get logging(): boolean;
     set logging(enableLogging: boolean);
@@ -659,6 +663,41 @@ const UncomplicatedPlayer = (() => {
                 makeLog('set prefetch');
 
                 adjustPlayers();
+            },
+
+            /// Get crossfade state
+            get crossfade(): CrossfadeParams {
+                return {
+                    crossfade: config.crossfade,
+                    crossfadeQueue: config.crossfadeQueue,
+                    crossfadePlaylist: config.crossfadePlaylist,
+                    crossfadeManualSwitch: config.crossfadeManualSwitch,
+                    crossfadeDuration: config.crossfadeDuration,
+                };
+            },
+
+            /// Set crossfade params
+            /// Crossfade duration in milliseconds
+            /// Disable crossfade if duration is zero
+            /// Reset to default value 1000ms if duration < 0
+            set crossfade(params: Partial<CrossfadeParams>) {
+                const currentConfig = this.crossfade; // using getter defined above
+                let key: keyof CrossfadeParams;
+                for (key in currentConfig)
+                    if (!params[key])
+                        params = { ...params, [key]: currentConfig[key] };
+
+                if (params.crossfadeDuration === 0) {
+                    params.crossfadeDuration = config.crossfadeDuration;
+                    params.crossfade = false;
+                } else if (
+                    params.crossfadeDuration &&
+                    params.crossfadeDuration < 0
+                ) {
+                    params.crossfadeDuration = defaultConfig.crossfadeDuration;
+                }
+
+                makeLog('set crossfade config:', this.crossfade);
             },
 
             /// Get logging enabled/disabled state.
