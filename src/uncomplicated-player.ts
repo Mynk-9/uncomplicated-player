@@ -7,6 +7,7 @@ import {
 import UncomplicatedPlayerQueue from './uncomplicated-player-queue';
 
 interface UncomplicatedPlayer {
+    get playState(): boolean;
     play(): void;
     pause(): void;
 
@@ -511,6 +512,10 @@ const UncomplicatedPlayer = (() => {
         ////// public functions ///////
 
         return {
+            get playState(): boolean {
+                return config.globalPlay;
+            },
+
             /// Play the current track
             play: (): void => {
                 players[_currentPlayer].sourceNode.mediaElement.play();
