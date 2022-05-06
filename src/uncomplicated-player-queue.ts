@@ -345,8 +345,15 @@ class UncomplicatedPlayerQueue {
 
         if (this.queue.curr)
             this.queue.nextSeek = [this.queue.curr, ...this.queue.nextSeek];
-        let track = this.queue.nextSeek.pop();
-        if (track) this.queue.next[track.key.toString()] = track;
+
+        let track: Track | undefined;
+        // if nextSeek size is more than the seek size, pop the last track and
+        // push into next
+        if (this.queue.nextSeek.length > this.seekSize) {
+            track = this.queue.nextSeek.pop();
+            if (track) this.queue.next[track.key.toString()] = track;
+        }
+
         track = this.queue.history.pop();
         // have to make this extra check because typescript throws error otherwise
         // even though track is guaranteed to be not undefined
