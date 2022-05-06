@@ -72,7 +72,9 @@ const UncomplicatedPlayer = (() => {
     let instance: UncomplicatedPlayer;
 
     const init = (
-        latencyMode: AudioContextLatencyCategory = 'playback'
+        latencyMode: AudioContextLatencyCategory = 'playback',
+        __logging: boolean = false,
+        __logger: { (log: string): void } = () => {}
     ): UncomplicatedPlayer => {
         ///////////////////////////////
         ///////////////////////////////
@@ -109,8 +111,8 @@ const UncomplicatedPlayer = (() => {
             crossfadeManualSwitch: true,
             crossfadeDuration: 1000,
 
-            loggingState: false,
-            logger: () => {},
+            loggingState: __logging,
+            logger: __logger,
         };
         let config: UncomplicatedConfig = { ...defaultConfig };
 
@@ -566,11 +568,11 @@ const UncomplicatedPlayer = (() => {
                 else config.globalGain = volume;
                 adjustGain();
                 makeLog(
-                    'set volume:',
-                    'input:',
-                    volume,
-                    'set:',
-                    config.globalGain
+                    'set volume: ' +
+                        'input: ' +
+                        volume +
+                        ' set: ' +
+                        config.globalGain
                 );
             },
 
@@ -733,10 +735,12 @@ const UncomplicatedPlayer = (() => {
          * @returns true if instance created, false if instance was already created
          */
         initInstance: (
-            latencyMode: AudioContextLatencyCategory = 'playback'
+            latencyMode: AudioContextLatencyCategory = 'playback',
+            logging: boolean = false,
+            logger: { (log: string): void }
         ): boolean => {
             if (instance) return false;
-            instance = init(latencyMode);
+            instance = init(latencyMode, logging, logger);
             return true;
         },
 
