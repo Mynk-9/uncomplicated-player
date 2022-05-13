@@ -516,7 +516,8 @@ const UncomplicatedPlayer = (() => {
             }
 
             // player switch and prefetch update
-            switchPlayers(oldCurrentIndex, newCurrentIndex, fade);
+            if (config.globalPlay)
+                switchPlayers(oldCurrentIndex, newCurrentIndex, fade);
             updatePrefetch();
         };
 
