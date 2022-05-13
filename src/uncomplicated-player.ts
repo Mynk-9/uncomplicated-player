@@ -148,6 +148,7 @@ const UncomplicatedPlayer = (() => {
             newPlayer.gainNode.connect(audioContext.destination);
             // set gain equal to global gain
             newPlayer.gainNode.gain.value = config.globalGain;
+            newPlayer.gainNode.gain.value = 0;
 
             // allow cors in media element
             newPlayer.sourceNode.mediaElement.crossOrigin = 'anonymous';
