@@ -307,6 +307,7 @@ class UncomplicatedPlayerQueue {
             if (this.queue.curr) this.queue.history.push(this.queue.curr);
             this.queue.curr = this.queue.nextSeek[0];
             this.queue.nextSeek.splice(0, 1);
+            this.queueMutationCallback(['next']);
             return this.queue.curr;
         }
 
