@@ -239,7 +239,7 @@ const UncomplicatedPlayer = (() => {
             exponentialGainTransition(
                 player.crossfadeNode,
                 0,
-                fade ? 0 : config.crossfadeDuration
+                fade ? config.crossfadeDuration : 0
             )
                 .then(() => {
                     // confirm if player state is not changed meanwhile
@@ -256,8 +256,8 @@ const UncomplicatedPlayer = (() => {
             player.play = true;
             exponentialGainTransition(
                 player.crossfadeNode,
-                1,
-                fade ? 0 : config.crossfadeDuration
+                config.globalGain,
+                fade ? config.crossfadeDuration : 0
             )
                 .then(() => {
                     // confirm if player state is not changed meanwhile
