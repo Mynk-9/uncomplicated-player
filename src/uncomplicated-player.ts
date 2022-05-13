@@ -261,8 +261,13 @@ const UncomplicatedPlayer = (() => {
             )
                 .then(() => {
                     // confirm if player state is not changed meanwhile
-                    if (player.play === true)
+                    if (player.play === true) {
+                        player.crossfadeNode.gain.cancelAndHoldAtTime(
+                            audioContext.currentTime
+                        );
                         player.gainNode.gain.value = config.globalGain;
+                        player.sourceNode.mediaElement.play();
+                    }
                 })
                 .catch(() =>
                     makeLog(`Error at playing player ${_currentPlayer}`)
