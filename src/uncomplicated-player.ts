@@ -545,15 +545,21 @@ const UncomplicatedPlayer = (() => {
 
             /// Play the current track
             play: (): void => {
-                players[_currentPlayer].sourceNode.mediaElement.play();
                 config.globalPlay = true;
+                playerPlay(
+                    players[_currentPlayer],
+                    config.crossfade && config.crossfadeManualSwitch
+                );
                 makeLog(`play player - ${_currentPlayer}`);
             },
 
             /// Pause the current track
             pause: (): void => {
-                playerPause(players[_currentPlayer], config.crossfade);
                 config.globalPlay = false;
+                playerPause(
+                    players[_currentPlayer],
+                    config.crossfade && config.crossfadeManualSwitch
+                );
                 makeLog(`pause player - ${_currentPlayer}`);
             },
 
