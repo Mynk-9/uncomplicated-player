@@ -269,7 +269,7 @@ const UncomplicatedPlayer = (() => {
                 );
         };
 
-        // switch from player1 to player2
+        // switch from player1 to player2 while playing
         const switchPlayers = (
             oldIndex: number,
             newIndex: number,
@@ -291,7 +291,7 @@ const UncomplicatedPlayer = (() => {
                         : (_currentPlayer + i) % playersCount
                 );
             }
-            makeLog(`getNextPlayers`);
+            makeLog(`getNextPlayers - `, indexes);
             return indexes;
         };
 
@@ -337,9 +337,16 @@ const UncomplicatedPlayer = (() => {
                 else if (
                     players[playerIndex].sourceNode.mediaElement.src !==
                     nextSeek[i].src.toString()
-                )
+                ) {
+                    makeLog(
+                        'updatePrefetch - next - ',
+                        playerIndex,
+                        players[playerIndex].sourceNode.mediaElement.src,
+                        nextSeek[i].src.toString()
+                    );
                     players[playerIndex].sourceNode.mediaElement.src =
                         nextSeek[i].src.toString();
+                }
             });
             prevPlayers.forEach((playerIndex, i) => {
                 if (!prevSeek[i])
@@ -347,9 +354,16 @@ const UncomplicatedPlayer = (() => {
                 else if (
                     players[playerIndex].sourceNode.mediaElement.src !==
                     prevSeek[i].src.toString()
-                )
+                ) {
+                    makeLog(
+                        'updatePrefetch - prev - ',
+                        playerIndex,
+                        players[playerIndex].sourceNode.mediaElement.src,
+                        prevSeek[i].src.toString()
+                    );
                     players[playerIndex].sourceNode.mediaElement.src =
                         prevSeek[i].src.toString();
+                }
             });
 
             makeLog('updatePrefetch');
@@ -527,14 +541,14 @@ const UncomplicatedPlayer = (() => {
             play: (): void => {
                 players[_currentPlayer].sourceNode.mediaElement.play();
                 config.globalPlay = true;
-                makeLog('play');
+                makeLog(`play player - ${_currentPlayer}`);
             },
 
             /// Pause the current track
             pause: (): void => {
                 playerPause(players[_currentPlayer], config.crossfade);
                 config.globalPlay = false;
-                makeLog('pause');
+                makeLog(`pause player - ${_currentPlayer}`);
             },
 
             /// Increase the volume with the provided delta.
