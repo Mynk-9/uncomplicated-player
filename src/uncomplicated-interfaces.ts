@@ -74,7 +74,7 @@ interface UncomplicatedConfig extends CrossfadeParams {
 
     // logging configs
     loggingState: boolean;
-    logger: { (log: string): void };
+    logger: { (...log: any): void };
 }
 
 export {

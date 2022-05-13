@@ -31,7 +31,7 @@ interface UncomplicatedPlayer {
     get queue(): UncomplicatedPlayerQueue;
     get logging(): boolean;
     set logging(enableLogging: boolean);
-    set logger(func: { (log: string): void });
+    set logger(func: { (log: any[]): void });
 }
 
 /**
@@ -74,7 +74,7 @@ const UncomplicatedPlayer = (() => {
     const init = (
         latencyMode: AudioContextLatencyCategory = 'playback',
         __logging: boolean = false,
-        __logger: { (log: string): void } = () => {}
+        __logger: { (...log: any): void } = () => {}
     ): UncomplicatedPlayer => {
         ///////////////////////////////
         ///////////////////////////////
@@ -125,12 +125,9 @@ const UncomplicatedPlayer = (() => {
         ////// private functions //////
 
         // logging utility
-        const makeLog = (log: string, ...params: any[]) => {
+        const makeLog = (...logs: any[]) => {
             if (config.loggingState) {
-                config.logger(log);
-                params.forEach(param => {
-                    config.logger('' + param);
-                });
+                config.logger('ucp: ', ...logs);
             }
         };
 
@@ -719,7 +716,7 @@ const UncomplicatedPlayer = (() => {
 
             /// Provide a different logging function than the stock one.
             /// Function should take a string as parameter.
-            set logger(func: { (log: string): void }) {
+            set logger(func: { (...log: any): void }) {
                 config.logger = func;
             },
         };
@@ -737,7 +734,7 @@ const UncomplicatedPlayer = (() => {
         initInstance: (
             latencyMode: AudioContextLatencyCategory = 'playback',
             logging: boolean = false,
-            logger: { (log: string): void }
+            logger: { (...log: any): void }
         ): boolean => {
             if (instance) return false;
             instance = init(latencyMode, logging, logger);
