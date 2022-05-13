@@ -546,11 +546,21 @@ const UncomplicatedPlayer = (() => {
             /// Play the current track
             play: (): void => {
                 config.globalPlay = true;
-                playerPlay(
-                    players[_currentPlayer],
-                    config.crossfade && config.crossfadeManualSwitch
-                );
-                makeLog(`play player - ${_currentPlayer}`);
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume().then(() => {
+                        playerPlay(
+                            players[_currentPlayer],
+                            config.crossfade && config.crossfadeManualSwitch
+                        );
+                        makeLog(`play player - ${_currentPlayer}`);
+                    });
+                } else {
+                    playerPlay(
+                        players[_currentPlayer],
+                        config.crossfade && config.crossfadeManualSwitch
+                    );
+                    makeLog(`play player - ${_currentPlayer}`);
+                }
             },
 
             /// Pause the current track
