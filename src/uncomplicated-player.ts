@@ -192,6 +192,13 @@ const UncomplicatedPlayer = (() => {
             targetGain: number,
             duration: number
         ): Promise<void> => {
+            if (duration === 0) {
+                gainNode.gain.value = targetGain;
+                return new Promise(resolvePromise => {
+                    resolvePromise();
+                });
+            }
+
             const timeConst = duration / 1000 / 5;
             gainNode.gain.cancelAndHoldAtTime(audioContext.currentTime);
             gainNode.gain.setTargetAtTime(
