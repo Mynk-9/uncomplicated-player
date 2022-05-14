@@ -170,12 +170,14 @@ const UncomplicatedPlayer = (() => {
         // stops all players if index not provided
         const playerStop = (index?: number) => {
             if (!index) {
-                players.forEach(player =>
-                    player.sourceNode.mediaElement.pause()
-                );
+                players.forEach(player => {
+                    player.sourceNode.mediaElement.pause();
+                    player.sourceNode.mediaElement.currentTime = 0;
+                });
                 makeLog('playerStop - all');
             } else {
                 players[index].sourceNode.mediaElement.pause();
+                players[index].sourceNode.mediaElement.currentTime = 0;
                 makeLog(`playerStop - ${index}`);
             }
         };
