@@ -312,6 +312,7 @@ const UncomplicatedPlayer = (() => {
                         : _currentPlayer - i + playersCount
                 );
             }
+            indexes.reverse();
             makeLog('getPrevPlayers - ', indexes);
             return indexes;
         };
