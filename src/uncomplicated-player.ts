@@ -146,8 +146,7 @@ const UncomplicatedPlayer = (() => {
             newPlayer.crossfadeNode.connect(newPlayer.gainNode);
             // connect gain to destination
             newPlayer.gainNode.connect(audioContext.destination);
-            // set gain equal to global gain
-            newPlayer.gainNode.gain.value = config.globalGain;
+            // initially set gain equal to 0
             newPlayer.gainNode.gain.value = 0;
 
             // allow cors in media element
