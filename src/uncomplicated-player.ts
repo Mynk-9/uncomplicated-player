@@ -263,6 +263,7 @@ const UncomplicatedPlayer = (() => {
         const playerPlay = (player: Players, fade: boolean) => {
             player.state++;
             let playerState = player.state;
+            player.sourceNode.mediaElement.play();
             exponentialGainTransition(
                 player.crossfadeNode,
                 config.globalGain,
@@ -275,7 +276,6 @@ const UncomplicatedPlayer = (() => {
                             audioContext.currentTime
                         );
                         player.gainNode.gain.value = config.globalGain;
-                        player.sourceNode.mediaElement.play();
                     }
                 })
                 .catch(() =>
