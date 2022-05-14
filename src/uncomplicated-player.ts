@@ -137,7 +137,7 @@ const UncomplicatedPlayer = (() => {
                 sourceNode: audioContext.createMediaElementSource(new Audio()),
                 crossfadeNode: audioContext.createGain(),
                 gainNode: audioContext.createGain(),
-                play: false,
+                state: 0,
             };
 
             // connect source node to crossfade gain node
@@ -235,7 +235,8 @@ const UncomplicatedPlayer = (() => {
 
         // pauses the player according to the configs
         const playerPause = (player: Players, fade: boolean) => {
-            player.play = false;
+            player.state++;
+            let playerState = player.state;
             exponentialGainTransition(
                 player.crossfadeNode,
                 0,
@@ -243,7 +244,7 @@ const UncomplicatedPlayer = (() => {
             )
                 .then(() => {
                     // confirm if player state is not changed meanwhile
-                    if (player.play === false)
+                    if (player.state === playerState)
                         player.sourceNode.mediaElement.pause();
                 })
                 .catch(() =>
@@ -253,7 +254,8 @@ const UncomplicatedPlayer = (() => {
 
         // plays the player according to the configs
         const playerPlay = (player: Players, fade: boolean) => {
-            player.play = true;
+            player.state++;
+            let playerState = player.state;
             exponentialGainTransition(
                 player.crossfadeNode,
                 config.globalGain,
@@ -261,7 +263,7 @@ const UncomplicatedPlayer = (() => {
             )
                 .then(() => {
                     // confirm if player state is not changed meanwhile
-                    if (player.play === true) {
+                    if (player.state === playerState) {
                         player.crossfadeNode.gain.cancelAndHoldAtTime(
                             audioContext.currentTime
                         );

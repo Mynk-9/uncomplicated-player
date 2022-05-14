@@ -37,7 +37,7 @@ interface Players {
     crossfadeNode: GainNode;
     gainNode: GainNode;
     scheduledEvent?: Function;
-    play: Boolean;
+    state: number;
 }
 
 /**
