@@ -246,8 +246,13 @@ const UncomplicatedPlayer = (() => {
             )
                 .then(() => {
                     // confirm if player state is not changed meanwhile
-                    if (player.state === playerState)
+                    if (player.state === playerState) {
                         player.sourceNode.mediaElement.pause();
+                        player.crossfadeNode.gain.cancelAndHoldAtTime(
+                            audioContext.currentTime
+                        );
+                        player.crossfadeNode.gain.value = 0;
+                    }
                 })
                 .catch(() =>
                     makeLog(`Error at pausing player ${_currentPlayer}`)
