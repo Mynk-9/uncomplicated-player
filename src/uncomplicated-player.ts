@@ -290,6 +290,7 @@ const UncomplicatedPlayer = (() => {
             fade: boolean
         ) => {
             if (oldIndex === newIndex) return;
+            players[newIndex].crossfadeNode.gain.value = 0;
             playerPause(players[oldIndex], fade);
             playerPlay(players[newIndex], fade);
             makeLog(`switchPlayers - ${oldIndex}<>${newIndex}`);
