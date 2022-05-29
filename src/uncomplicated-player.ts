@@ -262,6 +262,7 @@ const UncomplicatedPlayer = (() => {
         const playerPlay = (player: Players, fade: boolean) => {
             player.state++;
             let playerState = player.state;
+            makeLog('playerPlay - src -', player.sourceNode.mediaElement.src);
             player.sourceNode.mediaElement.play();
             exponentialGainTransition(
                 player.crossfadeNode,
@@ -341,6 +342,7 @@ const UncomplicatedPlayer = (() => {
         // updates prefetch according to queue mutations
         const updatePrefetch = () => {
             let { next: nextSeek, prev: prevSeek } = ucpQueue.seek;
+            makeLog('updatePrefetch - seek -', { nextSeek, prevSeek });
             let nextPlayers: number[] = getNextPlayers();
             let prevPlayers: number[] = getPrevPlayers();
 
@@ -738,22 +740,30 @@ const UncomplicatedPlayer = (() => {
             /// Crossfade duration in milliseconds
             /// Disable crossfade if duration is zero
             /// Reset to default value 1000ms if duration < 0
-            set crossfade(params: Partial<CrossfadeParams>) {
-                const currentConfig = this.crossfade; // using getter defined above
-                let key: keyof CrossfadeParams;
-                for (key in currentConfig)
-                    if (!params[key])
-                        params = { ...params, [key]: currentConfig[key] };
+            set crossfade(crossfadeParams: Partial<CrossfadeParams>) {
+                // new config = params override current config
+                let params: CrossfadeParams = {
+                    ...this.crossfade, // using getter defined above
+                    ...crossfadeParams,
+                };
 
                 if (params.crossfadeDuration === 0) {
+                    // disable crossfade instead of duration 0
                     params.crossfadeDuration = config.crossfadeDuration;
                     params.crossfade = false;
                 } else if (
                     params.crossfadeDuration &&
                     params.crossfadeDuration < 0
                 ) {
+                    // if crossfade duration is negative
                     params.crossfadeDuration = defaultConfig.crossfadeDuration;
                 }
+
+                config.crossfade = params.crossfade;
+                config.crossfadeQueue = params.crossfadeQueue;
+                config.crossfadePlaylist = params.crossfadePlaylist;
+                config.crossfadeManualSwitch = params.crossfadeManualSwitch;
+                config.crossfadeDuration = params.crossfadeDuration;
 
                 makeLog('set crossfade config:', this.crossfade);
             },
