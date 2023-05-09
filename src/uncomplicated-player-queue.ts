@@ -61,7 +61,7 @@ class UncomplicatedPlayerQueue {
         this.shuffleQueue = false;
         this.tracksKeyCounter = 0;
         this.seekSize = 3;
-        this.queueMutationCallback = (args: any[] | undefined): void => {};
+        this.queueMutationCallback = () => ({});
     }
 
     /**
@@ -92,7 +92,7 @@ class UncomplicatedPlayerQueue {
      */
     private refreshQueue(): void {
         const adjustNextSeek = () => {
-            let nextSeekLen: number = this.queue.nextSeek.length;
+            const nextSeekLen: number = this.queue.nextSeek.length;
 
             // if nextSeek larger then remove the extra tracks and insert into next
             if (nextSeekLen > this.seekSize) {
@@ -105,15 +105,15 @@ class UncomplicatedPlayerQueue {
             // if nextSeek smaller, then transfer extra tracks from next according
             // to shuffle state
             else if (nextSeekLen < this.seekSize) {
-                let keys: string[] = Object.keys(this.queue.next);
-                let needed: number = Math.min(
+                const keys: string[] = Object.keys(this.queue.next);
+                const needed: number = Math.min(
                     this.seekSize - nextSeekLen,
                     keys.length
                 );
 
                 if (this.shuffleQueue) {
                     for (let i = 0; i < needed; ++i) {
-                        let random =
+                        const random =
                             Math.floor((keys.length - i) * Math.random()) + i;
                         [keys[i], keys[random]] = [keys[random], keys[i]];
                     }
@@ -140,12 +140,12 @@ class UncomplicatedPlayerQueue {
         //      else add from nextSeek and readjust nextSeek
         // note: if nextSeek is empty then current will get null value
         if (!this.queue.curr) {
-            let keys = Object.keys(this.queue.next);
+            const keys = Object.keys(this.queue.next);
             if (this.seekSize === 0 && keys.length > 0) {
-                let index: number = 0;
+                let index = 0;
                 if (this.shuffleQueue)
                     index = Math.floor(keys.length * Math.random());
-                let key = keys[index];
+                const key = keys[index];
                 this.queue.curr = this.queue.next[key];
                 delete this.queue.next[key];
             } else {
@@ -162,7 +162,7 @@ class UncomplicatedPlayerQueue {
      * @returns {number} key of added track
      */
     public push(track: PrimitiveTrack): number {
-        let key = ++this.tracksKeyCounter;
+        const key = ++this.tracksKeyCounter;
         this.queue.next[key.toString()] = { ...track, key: key };
         this.refreshQueue();
         this.queueMutationCallback(['push']);
@@ -176,9 +176,9 @@ class UncomplicatedPlayerQueue {
      * @returns {Track[]} tracks array with respective key added to each track
      */
     public pushMany(tracks: PrimitiveTrack[]): Track[] {
-        let tracksAdded: Track[] = [];
+        const tracksAdded: Track[] = [];
         tracks.forEach(track => {
-            let key = ++this.tracksKeyCounter;
+            const key = ++this.tracksKeyCounter;
             this.queue.next[key.toString()] = { ...track, key: key };
             tracksAdded.push({ ...track, key: key });
         });
@@ -193,7 +193,7 @@ class UncomplicatedPlayerQueue {
      * @returns {number} key of added track
      */
     public addNext(track: PrimitiveTrack): number {
-        let key = ++this.tracksKeyCounter;
+        const key = ++this.tracksKeyCounter;
         this.queue.nextSeek = [{ ...track, key: key }, ...this.queue.nextSeek];
         this.refreshQueue();
         this.queueMutationCallback(['addNext']);
@@ -206,18 +206,18 @@ class UncomplicatedPlayerQueue {
      * @returns key of the removed track, if no track exists then -1
      */
     public pop(): number {
-        let keys = Object.keys(this.queue.next);
+        const keys = Object.keys(this.queue.next);
         if (keys.length > 0) {
-            let key = keys[keys.length - 1];
+            const key = keys[keys.length - 1];
             delete this.queue.next[key];
             return parseInt(key);
         } else if (this.queue.nextSeek.length > 0) {
-            let key = this.queue.nextSeek[this.queue.nextSeek.length - 1].key;
+            const key = this.queue.nextSeek[this.queue.nextSeek.length - 1].key;
             this.queue.nextSeek.pop();
             this.queueMutationCallback(['pop']);
             return key;
         } else if (this.queue.curr) {
-            let key = this.queue.curr.key;
+            const key = this.queue.curr.key;
             this.queue.curr = null;
             this.queueMutationCallback(['pop']);
             return key;
@@ -235,16 +235,16 @@ class UncomplicatedPlayerQueue {
     public remove(search: {
         key?: number;
         src?: URL;
-        data?: Object;
+        data?: object;
     }): number[] {
-        let removedKeys: number[] = [];
+        const removedKeys: number[] = [];
 
         // next:
         // apply filter to keys according to recursiveCompare
         // then use reducer to create new object from filtered keys
         this.queue.next = Object.keys(this.queue.next)
             .filter((key: string) => {
-                let predicateVal = !this.recursiveCompare(
+                const predicateVal = !this.recursiveCompare(
                     this.queue.next[key],
                     search
                 );
@@ -262,7 +262,7 @@ class UncomplicatedPlayerQueue {
             this.queue.history,
         ].map(queueComponent =>
             queueComponent.filter(track => {
-                let predicateVal = !this.recursiveCompare(track, search);
+                const predicateVal = !this.recursiveCompare(track, search);
                 if (!predicateVal) removedKeys.push(track.key);
                 return predicateVal;
             })
@@ -301,7 +301,7 @@ class UncomplicatedPlayerQueue {
         // return null if nextSeek is empty
         if (this.isNextEmpty) return null;
 
-        let keys: string[] = Object.keys(this.queue.next);
+        const keys: string[] = Object.keys(this.queue.next);
         // if there are no items in next then keep exhausting nextSeek
         if (keys.length === 0) {
             if (this.queue.curr) this.queue.history.push(this.queue.curr);
@@ -426,9 +426,9 @@ class UncomplicatedPlayerQueue {
      *  oldest...recent         next...last
      */
     public get seek(): { next: Track[]; prev: Track[] } {
-        let nextSeek: Track[] = this.queue.nextSeek;
-        let prevSeek: Track[] = [];
-        let prevSeekSize = Math.min(this.seekSize, this.queue.history.length);
+        const nextSeek: Track[] = this.queue.nextSeek;
+        const prevSeek: Track[] = [];
+        const prevSeekSize = Math.min(this.seekSize, this.queue.history.length);
 
         for (let i = 1; i <= prevSeekSize; ++i)
             prevSeek.push(this.queue.history[this.queue.history.length - i]);
