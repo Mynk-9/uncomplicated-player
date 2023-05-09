@@ -3,7 +3,7 @@
  */
 interface PrimitiveTrack {
     src: URL;
-    data: Record<string, any>;
+    data: Record<string, unknown>;
 }
 /**
  * Interface for queue tracks.
@@ -26,7 +26,7 @@ interface Queue {
  * Interface for mutation callback
  */
 interface QueueMutationCallback {
-    (args: any[]): void;
+    (args: unknown[]): void;
 }
 
 /**
@@ -36,7 +36,7 @@ interface Players {
     sourceNode: MediaElementAudioSourceNode;
     crossfadeNode: GainNode;
     gainNode: GainNode;
-    scheduledEvent?: Function;
+    scheduledEvent?: () => void;
     state: number;
 }
 

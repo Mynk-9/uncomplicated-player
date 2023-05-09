@@ -3,7 +3,7 @@ import {
     Track,
     Queue,
     QueueMutationCallback,
-} from './uncomplicated-interfaces';
+} from './interfaces';
 
 /**
  * Queue mechanism:

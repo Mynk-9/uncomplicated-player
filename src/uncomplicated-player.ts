@@ -3,7 +3,7 @@ import {
     QueueMutationCallback,
     CrossfadeParams,
     UncomplicatedConfig,
-} from './uncomplicated-interfaces';
+} from './interfaces';
 import UncomplicatedPlayerQueue from './uncomplicated-player-queue';
 
 interface UncomplicatedPlayer {

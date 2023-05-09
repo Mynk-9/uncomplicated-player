@@ -1,4 +1,4 @@
-import { PrimitiveTrack } from '../src/uncomplicated-interfaces';
+import { PrimitiveTrack } from '../src/interfaces';
 import UncomplicatedPlayerQueue from '../src/uncomplicated-player-queue';
 
 const uncomplicatedPlayerQueue = new UncomplicatedPlayerQueue();
