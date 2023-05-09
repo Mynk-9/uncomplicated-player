@@ -1,14 +1,14 @@
 import { PrimitiveTrack } from '../src/uncomplicated-interfaces';
 import UncomplicatedPlayerQueue from '../src/uncomplicated-player-queue';
 
-let uncomplicatedPlayerQueue = new UncomplicatedPlayerQueue();
+const uncomplicatedPlayerQueue = new UncomplicatedPlayerQueue();
 
 describe('Uncomplicated Player Queue tests', () => {
     /**
      * Pop, next, prev, is*Empty
      */
     test('Empty queue edge cases', () => {
-        let key: number = uncomplicatedPlayerQueue.pop();
+        const key: number = uncomplicatedPlayerQueue.pop();
         expect(key).toBe(-1);
 
         let track = uncomplicatedPlayerQueue.next();
@@ -65,7 +65,7 @@ describe('Uncomplicated Player Queue tests', () => {
      */
     test('Add one track', () => {
         uncomplicatedPlayerQueue.clear();
-        let track = {
+        const track = {
             src: new URL('http://test.com'),
             data: {
                 name: 'test0',
@@ -80,7 +80,7 @@ describe('Uncomplicated Player Queue tests', () => {
      */
     test('Add multiple tracks', () => {
         uncomplicatedPlayerQueue.clear();
-        let tracks = [];
+        const tracks: PrimitiveTrack[] = [];
         for (let i = 1; i <= 10; ++i) {
             tracks.push({
                 src: new URL(`http://test.com/${i}`),
@@ -101,7 +101,7 @@ describe('Uncomplicated Player Queue tests', () => {
      * Remove the last track using pop and check if it's 10
      */
     test('Remove last track', () => {
-        let removedKey = uncomplicatedPlayerQueue.pop();
+        const removedKey = uncomplicatedPlayerQueue.pop();
         expect(removedKey).toBe(10);
     });
 
@@ -109,7 +109,7 @@ describe('Uncomplicated Player Queue tests', () => {
      * First add 10 new tracks and then remove them.
      */
     test('Remove multiple tracks', () => {
-        let tracks = [];
+        const tracks: PrimitiveTrack[] = [];
         for (let i = 0; i < 10; ++i) {
             tracks.push({
                 src: new URL(`http://xyz.abc/${i}`),
@@ -119,10 +119,10 @@ describe('Uncomplicated Player Queue tests', () => {
             });
         }
 
-        let addedTrackKeys: number[] = uncomplicatedPlayerQueue
+        const addedTrackKeys: number[] = uncomplicatedPlayerQueue
             .pushMany(tracks)
             .map(track => track.key || -1);
-        let removedTrackKeys: number[] = uncomplicatedPlayerQueue.remove({
+        const removedTrackKeys: number[] = uncomplicatedPlayerQueue.remove({
             data: {
                 filteringData: 'filter',
             },
@@ -145,10 +145,10 @@ describe('Uncomplicated Player Queue tests', () => {
      * 8. Compare the sets, if different, test fails.
      */
     test('Shuffle test', () => {
-        let keysSet: Set<number> = new Set();
-        let shuffleKeysSet: Set<number> = new Set();
-        let plainItrKeys: number[] = [];
-        let shuffleItrKeys: number[] = [];
+        const keysSet: Set<number> = new Set();
+        const shuffleKeysSet: Set<number> = new Set();
+        const plainItrKeys: number[] = [];
+        const shuffleItrKeys: number[] = [];
 
         // clear the queue, shuffle off
         uncomplicatedPlayerQueue.clear();
@@ -156,7 +156,7 @@ describe('Uncomplicated Player Queue tests', () => {
 
         // insert 100 tracks, save their keys
         for (let i = 1; i <= 100; ++i) {
-            let key: number = uncomplicatedPlayerQueue.push({
+            const key: number = uncomplicatedPlayerQueue.push({
                 src: new URL('http://test.url/'),
                 data: {
                     prop: i,
@@ -208,7 +208,7 @@ describe('Uncomplicated Player Queue tests', () => {
      * 11. Enable shuffle.
      */
     test('Mutation callback test', () => {
-        let arg: string = '';
+        let arg = '';
         uncomplicatedPlayerQueue._mutationCallback = args => {
             arg = String(args[0]);
         };
@@ -226,7 +226,7 @@ describe('Uncomplicated Player Queue tests', () => {
         });
         expect(arg).toBe('push');
 
-        let tracks: PrimitiveTrack[] = [];
+        const tracks: PrimitiveTrack[] = [];
         for (let i = 0; i < 9; ++i) {
             tracks.push({
                 src: new URL('http://test.url'),
