@@ -73,21 +73,21 @@ const UncomplicatedPlayer = (() => {
 
     const init = (
         latencyMode: AudioContextLatencyCategory = 'playback',
-        __logging: boolean = false,
-        __logger: { (...log: any): void } = () => {}
+        __logging = false,
+        __logger: { (...log: any): void } = Function
     ): UncomplicatedPlayer => {
         ///////////////////////////////
         ///////////////////////////////
         ////// private variables //////
 
         // setting up audio context
-        let AudioContext = window.AudioContext;
+        const AudioContext = window.AudioContext;
         const audioContext = new AudioContext({
             latencyHint: latencyMode,
         });
 
         // setting up queue
-        let ucpQueue = new UncomplicatedPlayerQueue();
+        const ucpQueue = new UncomplicatedPlayerQueue();
 
         // players cycling variables
         let _currentPlayer = 0;
@@ -114,11 +114,11 @@ const UncomplicatedPlayer = (() => {
             loggingState: __logging,
             logger: __logger,
         };
-        let config: UncomplicatedConfig = { ...defaultConfig };
+        const config: UncomplicatedConfig = { ...defaultConfig };
 
         // setting up players
         let playersCount: number = 2 * defaultConfig.prefetchSize + 1;
-        let players: Players[] = Array<Players>(playersCount);
+        const players: Players[] = Array<Players>(playersCount);
 
         ///////////////////////////////
         ///////////////////////////////
@@ -133,7 +133,7 @@ const UncomplicatedPlayer = (() => {
 
         // create new player
         const createPlayer = (): Players => {
-            let newPlayer: Players = {
+            const newPlayer: Players = {
                 sourceNode: audioContext.createMediaElementSource(new Audio()),
                 crossfadeNode: audioContext.createGain(),
                 gainNode: audioContext.createGain(),
@@ -237,7 +237,7 @@ const UncomplicatedPlayer = (() => {
         // pauses the player according to the configs
         const playerPause = (player: Players, fade: boolean) => {
             player.state++;
-            let playerState = player.state;
+            const playerState = player.state;
             exponentialGainTransition(
                 player.crossfadeNode,
                 0,
@@ -261,7 +261,7 @@ const UncomplicatedPlayer = (() => {
         // plays the player according to the configs
         const playerPlay = (player: Players, fade: boolean) => {
             player.state++;
-            let playerState = player.state;
+            const playerState = player.state;
             makeLog('playerPlay - src -', player.sourceNode.mediaElement.src);
             player.sourceNode.mediaElement.play();
             exponentialGainTransition(
@@ -298,7 +298,7 @@ const UncomplicatedPlayer = (() => {
 
         // return array of next players
         const getNextPlayers = (): number[] => {
-            let indexes: number[] = [];
+            const indexes: number[] = [];
             for (let i = 1; i <= config.prefetchSize; ++i) {
                 indexes.push(
                     _currentPlayer + i < playersCount
@@ -312,7 +312,7 @@ const UncomplicatedPlayer = (() => {
 
         // get array of prev players
         const getPrevPlayers = (): number[] => {
-            let indexes: number[] = [];
+            const indexes: number[] = [];
             for (let i = 1; i <= config.prefetchSize; ++i) {
                 indexes.push(
                     _currentPlayer - i >= 0
@@ -341,10 +341,10 @@ const UncomplicatedPlayer = (() => {
 
         // updates prefetch according to queue mutations
         const updatePrefetch = () => {
-            let { next: nextSeek, prev: prevSeek } = ucpQueue.seek;
+            const { next: nextSeek, prev: prevSeek } = ucpQueue.seek;
             makeLog('updatePrefetch - seek -', { nextSeek, prevSeek });
-            let nextPlayers: number[] = getNextPlayers();
-            let prevPlayers: number[] = getPrevPlayers();
+            const nextPlayers: number[] = getNextPlayers();
+            const prevPlayers: number[] = getPrevPlayers();
 
             // if queue has nulls then we set blank src to Audio Source node
 
@@ -402,7 +402,7 @@ const UncomplicatedPlayer = (() => {
                 // make sure diff is positive
                 diff = Math.abs(diff);
 
-                let leftRange = [0, 0];
+                const leftRange = [0, 0];
                 let rightRange = [0, 0];
 
                 // splice right range first so that _currentPlayer is relevant
@@ -438,9 +438,9 @@ const UncomplicatedPlayer = (() => {
         const queueMutationCallback: QueueMutationCallback = (args: any[]) => {
             if (!args) return;
 
-            let oldCurrentIndex: number = _currentPlayer;
+            const oldCurrentIndex: number = _currentPlayer;
             let newCurrentIndex: number = oldCurrentIndex;
-            let fade: boolean = false;
+            let fade = false;
 
             switch (args[0]) {
                 case 'push':
@@ -742,7 +742,7 @@ const UncomplicatedPlayer = (() => {
             /// Reset to default value 1000ms if duration < 0
             set crossfade(crossfadeParams: Partial<CrossfadeParams>) {
                 // new config = params override current config
-                let params: CrossfadeParams = {
+                const params: CrossfadeParams = {
                     ...this.crossfade, // using getter defined above
                     ...crossfadeParams,
                 };
@@ -797,7 +797,7 @@ const UncomplicatedPlayer = (() => {
          */
         initInstance: (
             latencyMode: AudioContextLatencyCategory = 'playback',
-            logging: boolean = false,
+            logging = false,
             logger: { (...log: any): void }
         ): boolean => {
             if (instance) return false;
