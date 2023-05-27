@@ -1,9 +1,12 @@
+/** Track Data of Primitive Track */
+type PrimitiveTrackData = Record<string, any>;
+
 /**
  * Interface for queue track inputs.
  */
 interface PrimitiveTrack {
     src: URL;
-    data: Record<string, unknown>;
+    data: PrimitiveTrackData;
 }
 /**
  * Interface for queue tracks.
@@ -80,6 +83,7 @@ interface UncomplicatedConfig extends CrossfadeParams {
 export {
     Queue,
     Track,
+    PrimitiveTrackData,
     PrimitiveTrack,
     Players,
     QueueMutationCallback,

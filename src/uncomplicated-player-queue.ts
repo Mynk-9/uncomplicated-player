@@ -3,6 +3,7 @@ import {
     Track,
     Queue,
     QueueMutationCallback,
+    PrimitiveTrackData,
 } from './interfaces';
 
 /**
@@ -72,8 +73,8 @@ class UncomplicatedPlayerQueue {
      * @returns {Boolean} true if match, false otherwise
      */
     private recursiveCompare(
-        original: Record<string, any>,
-        comp: Record<string, any>
+        original: PrimitiveTrackData,
+        comp: PrimitiveTrackData
     ): boolean {
         if (comp === original) return true;
 
@@ -157,13 +158,33 @@ class UncomplicatedPlayerQueue {
     }
 
     /**
+     * Generate track from primitive track
+     * @param primitiveTrack primitive track
+     * @returns track
+     */
+    private generateTrackFromPrimitive(primitiveTrack: PrimitiveTrack): Track {
+        const key = ++this.tracksKeyCounter;
+        return { ...primitiveTrack, key: key };
+    }
+
+    /**
+     * Pushes a track to the queue
+     * @param primitiveTrack Primitive Track
+     * @returns added track
+     */
+    private pushPrimitiveTrack(primitiveTrack: PrimitiveTrack): Track {
+        const track: Track = this.generateTrackFromPrimitive(primitiveTrack);
+        this.queue.next[track.key.toString()] = track;
+        return track;
+    }
+
+    /**
      * Adds new track to the queue
      * @param {Track} track track to be added to the queue
      * @returns {number} key of added track
      */
     public push(track: PrimitiveTrack): number {
-        const key = ++this.tracksKeyCounter;
-        this.queue.next[key.toString()] = { ...track, key: key };
+        this.pushPrimitiveTrack(track);
         this.refreshQueue();
         this.queueMutationCallback(['push']);
         return this.tracksKeyCounter;
@@ -177,11 +198,9 @@ class UncomplicatedPlayerQueue {
      */
     public pushMany(tracks: PrimitiveTrack[]): Track[] {
         const tracksAdded: Track[] = [];
-        tracks.forEach(track => {
-            const key = ++this.tracksKeyCounter;
-            this.queue.next[key.toString()] = { ...track, key: key };
-            tracksAdded.push({ ...track, key: key });
-        });
+        tracks.forEach(track =>
+            tracksAdded.push(this.pushPrimitiveTrack(track))
+        );
         this.refreshQueue();
         this.queueMutationCallback(['pushMany']);
         return tracksAdded;
@@ -189,15 +208,15 @@ class UncomplicatedPlayerQueue {
 
     /**
      * Adds a track next up instead of queue end.
-     * @param {PrimitiveTrack} track track to be added next
+     * @param {PrimitiveTrack} primitiveTrack track to be added next
      * @returns {number} key of added track
      */
-    public addNext(track: PrimitiveTrack): number {
-        const key = ++this.tracksKeyCounter;
-        this.queue.nextSeek = [{ ...track, key: key }, ...this.queue.nextSeek];
+    public addNext(primitiveTrack: PrimitiveTrack): number {
+        const track: Track = this.generateTrackFromPrimitive(primitiveTrack);
+        this.queue.nextSeek = [track, ...this.queue.nextSeek];
         this.refreshQueue();
         this.queueMutationCallback(['addNext']);
-        return key;
+        return track.key;
     }
 
     /**
@@ -312,9 +331,9 @@ class UncomplicatedPlayerQueue {
         }
 
         // select the key as per shuffle config
-        let key: string = keys[0];
-        if (this.shuffleQueue)
-            key = keys[Math.floor(keys.length * Math.random())];
+        const key: string = this.shuffleQueue
+            ? keys[Math.floor(keys.length * Math.random())]
+            : keys[0];
 
         if (this.queue.curr) this.queue.history.push(this.queue.curr);
         this.queue.nextSeek.push(this.queue.next[key]);
@@ -342,7 +361,7 @@ class UncomplicatedPlayerQueue {
      * @returns {Track} the new current track if exists, otherwise null
      */
     public prev(): Track | null {
-        if (this.queue.history.length === 0) return null;
+        if (this.isPrevEmpty) return null;
 
         if (this.queue.curr)
             this.queue.nextSeek = [this.queue.curr, ...this.queue.nextSeek];
@@ -420,10 +439,12 @@ class UncomplicatedPlayerQueue {
 
     /**
      * Get the next and previous seeks.
+     * ```
      * [...............]       [...........]
      *  0.............n         0.........n
      *        prev                  next
      *  oldest...recent         next...last
+     * ```
      */
     public get seek(): { next: Track[]; prev: Track[] } {
         const nextSeek: Track[] = this.queue.nextSeek;
