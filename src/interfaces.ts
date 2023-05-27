@@ -1,5 +1,9 @@
 /** Track Data of Primitive Track */
 type PrimitiveTrackData = Record<string, any>;
+type QueueHistory = Track[];
+type QueueCurr = Track | null;
+type QueueNextSeek = Track[];
+type QueueNext = { [key: string]: Track };
 
 /**
  * Interface for queue track inputs.
@@ -19,10 +23,10 @@ interface Track extends PrimitiveTrack {
  * Interface for the Queue
  */
 interface Queue {
-    history: Track[];
-    curr: Track | null;
-    nextSeek: Track[];
-    next: { [key: string]: Track };
+    history: QueueHistory;
+    curr: QueueCurr;
+    nextSeek: QueueNextSeek;
+    next: QueueNext;
 }
 
 /**
@@ -81,6 +85,10 @@ interface UncomplicatedConfig extends CrossfadeParams {
 }
 
 export {
+    QueueHistory,
+    QueueCurr,
+    QueueNextSeek,
+    QueueNext,
     Queue,
     Track,
     PrimitiveTrackData,

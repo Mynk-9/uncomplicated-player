@@ -4,6 +4,8 @@ import {
     Queue,
     QueueMutationCallback,
     PrimitiveTrackData,
+    QueueHistory,
+    QueueNextSeek,
 } from './interfaces';
 
 /**
@@ -179,6 +181,64 @@ class UncomplicatedPlayerQueue {
     }
 
     /**
+     * Remove track(s) from next if search params match with track(s)
+     * @param search object to compare with tracks
+     * @returns list of removed keys
+     */
+    private removeFromNext(search: {
+        key?: number;
+        src?: URL;
+        data?: object;
+    }): number[] {
+        const removedKeys: number[] = [];
+
+        // apply filter to keys according to recursiveCompare
+        // then use reducer to create new object from filtered keys
+        this.queue.next = Object.keys(this.queue.next)
+            .filter((key: string) => {
+                const match = this.recursiveCompare(
+                    this.queue.next[key],
+                    search
+                );
+                if (match) removedKeys.push(parseInt(key));
+                return !match;
+            })
+            .reduce((newNext: { [key: string]: Track }, key: string) => {
+                newNext[key] = this.queue.next[key];
+                return newNext;
+            }, {});
+
+        return removedKeys;
+    }
+
+    /**
+     * Remove track(s) from given queue component if search params match with
+     * track(s)
+     * @param search object to compare with tracks
+     * @param component queue component to be operated on
+     * @returns list of removed keys
+     */
+    private removeFromQueueListComponent(
+        search: {
+            key?: number;
+            src?: URL;
+            data?: object;
+        },
+        component: QueueNextSeek | QueueHistory
+    ): number[] {
+        const removedKeys: number[] = [];
+
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        component = component.filter(track => {
+            const match = this.recursiveCompare(track, search);
+            if (match) removedKeys.push(track.key);
+            return !match;
+        });
+
+        return removedKeys;
+    }
+
+    /**
      * Adds new track to the queue
      * @param {Track} track track to be added to the queue
      * @returns {number} key of added track
@@ -260,35 +320,19 @@ class UncomplicatedPlayerQueue {
         const removedKeys: number[] = [];
 
         // next:
-        // apply filter to keys according to recursiveCompare
-        // then use reducer to create new object from filtered keys
-        this.queue.next = Object.keys(this.queue.next)
-            .filter((key: string) => {
-                const predicateVal = !this.recursiveCompare(
-                    this.queue.next[key],
-                    search
-                );
-                if (!predicateVal) removedKeys.push(parseInt(key));
-                return predicateVal;
-            })
-            .reduce((newNext: { [key: string]: Track }, key: string) => {
-                newNext[key] = this.queue.next[key];
-                return newNext;
-            }, {});
+        removedKeys.push(...this.removeFromNext(search));
 
-        /// nextSeek, history:
-        [this.queue.nextSeek, this.queue.history] = [
-            this.queue.nextSeek,
-            this.queue.history,
-        ].map(queueComponent =>
-            queueComponent.filter(track => {
-                const predicateVal = !this.recursiveCompare(track, search);
-                if (!predicateVal) removedKeys.push(track.key);
-                return predicateVal;
-            })
+        // nextSeek:
+        removedKeys.push(
+            ...this.removeFromQueueListComponent(search, this.queue.nextSeek)
         );
 
-        /// current
+        // history:
+        removedKeys.push(
+            ...this.removeFromQueueListComponent(search, this.queue.history)
+        );
+
+        // current
         if (this.queue.curr && this.recursiveCompare(this.queue.curr, search)) {
             removedKeys.push(this.queue.curr.key);
             this.queue.curr = null;

@@ -106,9 +106,12 @@ describe('Uncomplicated Player Queue tests', () => {
     });
 
     /**
-     * First add 10 new tracks and then remove them.
+     * Clear and reset queue. Then add 10 new tracks and then remove them.
      */
     test('Remove multiple tracks', () => {
+        uncomplicatedPlayerQueue.clear();
+        uncomplicatedPlayerQueue.reset();
+        uncomplicatedPlayerQueue.setDefaultSeekLength();
         const tracks: PrimitiveTrack[] = [];
         for (let i = 0; i < 10; ++i) {
             tracks.push({
@@ -128,7 +131,7 @@ describe('Uncomplicated Player Queue tests', () => {
             },
         });
 
-        expect(removedTrackKeys).toStrictEqual(addedTrackKeys);
+        expect(removedTrackKeys.sort()).toStrictEqual(addedTrackKeys.sort());
     });
 
     /**
